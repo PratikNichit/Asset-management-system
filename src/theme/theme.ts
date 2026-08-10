@@ -73,18 +73,13 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-    ].join(','),
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { fontFamily: '"Manrope", sans-serif' },
+    h2: { fontFamily: '"Manrope", sans-serif' },
+    h3: { fontFamily: '"Manrope", sans-serif' },
+    h4: { fontFamily: '"Manrope", sans-serif' },
+    h5: { fontFamily: '"Manrope", sans-serif' },
+    h6: { fontFamily: '"Manrope", sans-serif' },
   },
   components: {
     MuiButton: {
