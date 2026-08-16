@@ -23,7 +23,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const EXPANDED_WIDTH = 256;
+const EXPANDED_WIDTH = 300;
 const COLLAPSED_WIDTH = 68;
 const TRANSITION = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -38,27 +38,27 @@ const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: 'WORKSPACE',
     items: [
-      { id: 'dashboard',    label: 'Dashboard',    icon: <DashboardOutlinedIcon /> },
-      { id: 'assets',       label: 'Assets',       icon: <Inventory2OutlinedIcon /> },
+      { id: 'dashboard', label: 'Dashboard', icon: <DashboardOutlinedIcon /> },
+      { id: 'assets', label: 'Assets', icon: <Inventory2OutlinedIcon /> },
       { id: 'assign-asset', label: 'Assign asset', icon: <AssignmentIndOutlinedIcon /> },
-      { id: 'maintenance',  label: 'Maintenance',  icon: <BuildOutlinedIcon /> },
+      { id: 'maintenance', label: 'Maintenance', icon: <BuildOutlinedIcon /> },
     ],
   },
   {
     sectionLabel: 'PEOPLE AND STRUCTURE',
     items: [
-      { id: 'employees',   label: 'Employees',   icon: <PeopleOutlinedIcon /> },
+      { id: 'employees', label: 'Employees', icon: <PeopleOutlinedIcon /> },
       { id: 'departments', label: 'Departments', icon: <ApartmentOutlinedIcon /> },
-      { id: 'locations',   label: 'Locations',   icon: <LocationOnOutlinedIcon /> },
-      { id: 'categories',  label: 'Categories',  icon: <CategoryOutlinedIcon /> },
+      { id: 'locations', label: 'Locations', icon: <LocationOnOutlinedIcon /> },
+      { id: 'categories', label: 'Categories', icon: <CategoryOutlinedIcon /> },
     ],
   },
   {
     sectionLabel: 'INSIGHTS',
     items: [
-      { id: 'reports',       label: 'Reports',       icon: <BarChartOutlinedIcon /> },
+      { id: 'reports', label: 'Reports', icon: <BarChartOutlinedIcon /> },
       { id: 'notifications', label: 'Notifications', icon: <NotificationsOutlinedIcon /> },
-      { id: 'settings',      label: 'Settings',      icon: <SettingsOutlinedIcon /> },
+      { id: 'settings', label: 'Settings', icon: <SettingsOutlinedIcon /> },
     ],
   },
 ];
