@@ -1,0 +1,162 @@
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { RootState } from '../app/store';
+import type { Employee } from '../types/employee';
+
+export const INITIAL_EMPLOYEES: Employee[] = [
+  {
+    id: 'EMP-001',
+    name: 'Priya Sharma',
+    role: 'Engineering Lead',
+    department: 'Engineering',
+    location: 'HQ — Bengaluru',
+    email: 'priya@atlas.co',
+    joinedDate: '2022-03-14',
+    avatarBg: '#2563EB',
+  },
+  {
+    id: 'EMP-002',
+    name: 'Marcus Chen',
+    role: 'Design Director',
+    department: 'Design',
+    location: 'HQ — Bengaluru',
+    email: 'marcus@atlas.co',
+    joinedDate: '2021-08-10',
+    avatarBg: '#0284C7',
+  },
+  {
+    id: 'EMP-003',
+    name: 'Sofia Alvarez',
+    role: 'Ops Manager',
+    department: 'Operations',
+    location: 'Warehouse A',
+    email: 'sofia@atlas.co',
+    joinedDate: '2023-01-15',
+    avatarBg: '#EA580C',
+  },
+  {
+    id: 'EMP-004',
+    name: 'Kenji Tanaka',
+    role: 'Production Head',
+    department: 'Production',
+    location: 'Plant 1 — Pune',
+    email: 'kenji@atlas.co',
+    joinedDate: '2020-11-05',
+    avatarBg: '#2563EB',
+  },
+  {
+    id: 'EMP-005',
+    name: 'Amelia Wright',
+    role: 'QA Manager',
+    department: 'Quality',
+    location: 'HQ — Bengaluru',
+    email: 'amelia@atlas.co',
+    joinedDate: '2022-06-20',
+    avatarBg: '#65A30D',
+  },
+  {
+    id: 'EMP-006',
+    name: 'David Okafor',
+    role: 'Maintenance Lead',
+    department: 'Maintenance',
+    location: 'Plant 1 — Pune',
+    email: 'david@atlas.co',
+    joinedDate: '2019-04-12',
+    avatarBg: '#0284C7',
+  },
+  {
+    id: 'EMP-007',
+    name: 'Léa Dubois',
+    role: 'Software Engineer',
+    department: 'Engineering',
+    location: 'HQ — Bengaluru',
+    email: 'lea@atlas.co',
+    joinedDate: '2023-05-01',
+    avatarBg: '#0D9488',
+  },
+  {
+    id: 'EMP-008',
+    name: 'Rahul Verma',
+    role: 'Warehouse Supervisor',
+    department: 'Operations',
+    location: 'Warehouse A',
+    email: 'rahul@atlas.co',
+    joinedDate: '2022-09-18',
+    avatarBg: '#EA580C',
+  },
+];
+
+interface EmployeesState {
+  list: Employee[];
+  selectedEmployeeId: string | null;
+  searchQuery: string;
+  selectedDepartment: string;
+}
+
+const initialState: EmployeesState = {
+  list: INITIAL_EMPLOYEES,
+  selectedEmployeeId: null,
+  searchQuery: '',
+  selectedDepartment: 'all',
+};
+
+const employeesSlice = createSlice({
+  name: 'employees',
+  initialState,
+  reducers: {
+    setEmployees(state, action: PayloadAction<Employee[]>) {
+      state.list = action.payload;
+    },
+    addEmployee(state, action: PayloadAction<Omit<Employee, 'id'>>) {
+      const nextNum = state.list.length + 1;
+      const id = `EMP-${String(nextNum).padStart(3, '0')}`;
+      const avatarBgs = ['#2563EB', '#0284C7', '#EA580C', '#65A30D', '#0D9488', '#9333EA'];
+      const avatarBg = avatarBgs[Math.floor(Math.random() * avatarBgs.length)];
+      state.list.unshift({
+        id,
+        avatarBg,
+        ...action.payload,
+      });
+    },
+    updateEmployee(state, action: PayloadAction<Employee>) {
+      const index = state.list.findIndex((e) => e.id === action.payload.id);
+      if (index !== -1) {
+        state.list[index] = action.payload;
+      }
+    },
+    deleteEmployee(state, action: PayloadAction<string>) {
+      state.list = state.list.filter((e) => e.id !== action.payload);
+      if (state.selectedEmployeeId === action.payload) {
+        state.selectedEmployeeId = null;
+      }
+    },
+    setSelectedEmployeeId(state, action: PayloadAction<string | null>) {
+      state.selectedEmployeeId = action.payload;
+    },
+    setSearchQuery(state, action: PayloadAction<string>) {
+      state.searchQuery = action.payload;
+    },
+    setSelectedDepartment(state, action: PayloadAction<string>) {
+      state.selectedDepartment = action.payload;
+    },
+  },
+});
+
+export const {
+  setEmployees,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+  setSelectedEmployeeId,
+  setSearchQuery,
+  setSelectedDepartment,
+} = employeesSlice.actions;
+
+export const selectAllEmployeesList = (state: RootState) => state.employees.list;
+export const selectSelectedEmployeeId = (state: RootState) => state.employees.selectedEmployeeId;
+export const selectSearchQuery = (state: RootState) => state.employees.searchQuery;
+export const selectSelectedDepartment = (state: RootState) => state.employees.selectedDepartment;
+
+export const selectEmployeeById = (state: RootState, id: string | null) =>
+  id ? state.employees.list.find((e) => e.id === id) ?? null : null;
+
+export default employeesSlice.reducer;

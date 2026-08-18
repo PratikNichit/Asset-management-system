@@ -4,21 +4,12 @@ import Avatar from '@mui/material/Avatar';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import AssetClickableName from '../components/AssetClickableName';
 import AssetStatusBadge from '../components/AssetStatusBadge';
 import type { Asset } from './asset';
 
 // ─── Column Definition Type ───────────────────────────────────────────────────
 
-/**
- * Defines one column in AssetTable.
- *
- * @example
- * const nameCol: AssetColumnDef = {
- *   key: 'name',
- *   header: 'ASSET',
- *   render: (asset) => <strong>{asset.name}</strong>,
- * };
- */
 export interface AssetColumnDef {
   /** Unique key — used as the React `key` for the header and cell. */
   key: string;
@@ -31,8 +22,6 @@ export interface AssetColumnDef {
 }
 
 // ─── Shared cell helpers ──────────────────────────────────────────────────────
-// These are defined here so the default column set can use them,
-// and pages that build custom columns can import them too.
 
 function AssetAvatar({ name }: { name: string }) {
   const initials = name
@@ -66,25 +55,6 @@ function EmptyCell() {
 
 // ─── Default column set ───────────────────────────────────────────────────────
 
-/**
- * The full default column set for the Assets inventory table.
- *
- * Import and pass directly, or spread + override individual entries:
- *
- * @example
- * // Use as-is
- * <AssetTable assets={assets} columns={DEFAULT_ASSET_COLUMNS} />
- *
- * @example
- * // Drop the Warranty column
- * const cols = DEFAULT_ASSET_COLUMNS.filter(c => c.key !== 'warranty');
- * <AssetTable assets={assets} columns={cols} />
- *
- * @example
- * // Add a custom Actions column at the end
- * const cols = [...DEFAULT_ASSET_COLUMNS, actionsColumn];
- * <AssetTable assets={assets} columns={cols} />
- */
 export const DEFAULT_ASSET_COLUMNS: AssetColumnDef[] = [
   {
     key: 'asset',
@@ -93,21 +63,7 @@ export const DEFAULT_ASSET_COLUMNS: AssetColumnDef[] = [
     render: (asset) => (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
         <AssetAvatar name={asset.name} />
-        <Box>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', lineHeight: 1.2 }}>
-            {asset.name}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: '0.72rem',
-              color: 'text.secondary',
-              fontFamily: '"Roboto Mono", monospace',
-              mt: 0.2,
-            }}
-          >
-            {asset.code}
-          </Typography>
-        </Box>
+        <AssetClickableName assetId={asset.id} name={asset.name} code={asset.code} />
       </Box>
     ),
   },

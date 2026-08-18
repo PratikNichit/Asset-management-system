@@ -46,7 +46,7 @@ export interface AssignAssetPageProps {
 // ─── Page (container) ─────────────────────────────────────────────────────────
 
 export default function AssignAssetPage({ organizationName = 'Atlas Industries' }: AssignAssetPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbs, navigateToAsset } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
@@ -178,7 +178,12 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
 
           {/* Asset summary */}
           {selectedAsset ? (
-            <SummaryCard label="ASSET" primary={selectedAsset.name} secondary={selectedAsset.code} />
+            <SummaryCard
+              label="ASSET"
+              primary={selectedAsset.name}
+              secondary={selectedAsset.code}
+              onClick={() => navigateToAsset(selectedAsset.id)}
+            />
           ) : (
             <Box
               sx={{

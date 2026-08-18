@@ -11,6 +11,8 @@ export interface SummaryCardProps {
   primary: string;
   /** Smaller secondary line, e.g. asset code or department */
   secondary: string;
+  /** Optional click handler for summary card */
+  onClick?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -20,16 +22,22 @@ export interface SummaryCardProps {
  * Pure presentational — renders a label, a bold primary line, and a secondary line
  * inside a lightly bordered box. Reusable for any domain summary (asset, employee, etc.).
  */
-export default function SummaryCard({ label, primary, secondary }: SummaryCardProps) {
+export default function SummaryCard({ label, primary, secondary, onClick }: SummaryCardProps) {
   const theme = useTheme();
 
   return (
     <Box
+      onClick={onClick}
       sx={{
         border: `1px solid ${theme.palette.customColors.borderLight}`,
         borderRadius: 2,
         p: 1.5,
         bgcolor: theme.palette.customColors.bgLight,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.15s ease',
+        '&:hover': onClick
+          ? { borderColor: theme.palette.primary.main, bgcolor: 'background.paper' }
+          : {},
       }}
     >
       <Typography

@@ -1,14 +1,5 @@
 import { useState, useMemo } from 'react';
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
-import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Chip from '@mui/material/Chip';
@@ -184,24 +175,6 @@ export default function AssetTable({
 
   // ── Selection ────────────────────────────────────────────────────────────────
 
-  const isAllSelected =
-    filteredAssets.length > 0 && filteredAssets.every((a) => selected.has(a.id));
-  const isIndeterminate = !isAllSelected && filteredAssets.some((a) => selected.has(a.id));
-
-  function handleSelectAll(checked: boolean) {
-    const next = new Set(selected);
-    for (const a of filteredAssets) checked ? next.add(a.id) : next.delete(a.id);
-    setSelected(next);
-    onSelectionChange?.(next);
-  }
-
-  function handleSelectRow(id: string, checked: boolean) {
-    const next = new Set(selected);
-    checked ? next.add(id) : next.delete(id);
-    setSelected(next);
-    onSelectionChange?.(next);
-  }
-
   function handleCategoryChange(value: AssetCategory | 'All') {
     setActiveCategory(value);
     setSelected(new Set());
@@ -224,7 +197,10 @@ export default function AssetTable({
         columns={columns}
         keyExtractor={(asset) => asset.id}
         selectedIds={selected}
-        onSelectionChange={setSelected}
+        onSelectionChange={(nextSet) => {
+          setSelected(nextSet);
+          onSelectionChange?.(nextSet);
+        }}
         onRowClick={onRowClick}
         emptyMessage="No assets match your search."
         toolbar={

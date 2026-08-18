@@ -1,56 +1,139 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
 import { useLayout } from '../hooks/useLayout';
-import AppButton from '../components/AppButton';
+import WorkspaceSettingsTab from '../components/settings/WorkspaceSettingsTab';
+import MembersSettingsTab from '../components/settings/MembersSettingsTab';
+import BillingSettingsTab from '../components/settings/BillingSettingsTab';
+import AppearanceSettingsTab from '../components/settings/AppearanceSettingsTab';
+import NotificationSettingsTab from '../components/settings/NotificationSettingsTab';
+import SecuritySettingsTab from '../components/settings/SecuritySettingsTab';
 
 export interface SettingsPageProps {
   organizationName?: string;
 }
 
-export default function SettingsPage({ organizationName = 'Atlas Industries' }: SettingsPageProps) {
+export type SettingsTab = 'workspace' | 'members' | 'billing' | 'appearance' | 'notifications' | 'security';
+
+const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
+  { id: 'workspace', label: 'Workspace' },
+  { id: 'members', label: 'Members' },
+  { id: 'billing', label: 'Billing' },
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'notifications', label: 'Notifications' },
+  { id: 'security', label: 'Security' },
+];
+
+export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPageProps) {
   const { setBreadcrumbs } = useLayout();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('workspace');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Settings']);
-  }, [organizationName, setBreadcrumbs]);
+    const tabLabel = SETTINGS_TABS.find((t) => t.id === activeTab)?.label || 'Workspace';
+    setBreadcrumbs([organizationName, 'Settings', tabLabel]);
+  }, [activeTab, organizationName, setBreadcrumbs]);
+
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'workspace':
+        return <WorkspaceSettingsTab onSave={() => setToastMessage('Workspace details saved successfully.')} />;
+      case 'members':
+        return <MembersSettingsTab />;
+      case 'billing':
+        return <BillingSettingsTab onManageSubscription={() => setToastMessage('Redirecting to subscription management portal...')} />;
+      case 'appearance':
+        return <AppearanceSettingsTab onToggleTheme={() => setToastMessage('Theme preference updated.')} />;
+      case 'notifications':
+        return <NotificationSettingsTab />;
+      case 'security':
+        return <SecuritySettingsTab onNotify={(msg) => setToastMessage(msg)} />;
+      default:
+        return <WorkspaceSettingsTab onSave={() => setToastMessage('Workspace details saved successfully.')} />;
+    }
+  };
 
   return (
-    <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif' }}>
-          System & Workspace Settings
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+      {/* ── Page Header Bar ─────────────────────────────────────────────────── */}
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+        >
+          Settings
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Manage user permissions, custom fields, company profile, and API integrations.
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
+          Manage your workspace and personal preferences.
         </Typography>
       </Box>
 
-      <Paper
-        variant="outlined"
+      {/* ── Settings Sidebar + Content Panel Grid ───────────────────────────── */}
+      <Box
         sx={{
-          p: 6,
-          textAlign: 'center',
-          borderRadius: 2.5,
-          borderColor: 'customColors.borderLight',
-          bgcolor: 'customColors.white',
+          display: 'flex',
+          gap: 3.5,
+          alignItems: 'flex-start',
+          flexWrap: { xs: 'wrap', md: 'nowrap' },
         }}
       >
-        <Box sx={{ display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: 'primary.light', color: 'primary.main', mb: 2, opacity: 0.8 }}>
-          <SettingsOutlinedIcon sx={{ fontSize: 36 }} />
+        {/* ── Left Sidebar Sub-Navigation Tabs ─────────────────────────────── */}
+        <Box
+          sx={{
+            width: { xs: '100%', md: 200 },
+            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+          }}
+        >
+          {SETTINGS_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <Box
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                sx={{
+                  px: 2,
+                  py: 1.2,
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  fontSize: '0.88rem',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? 'primary.main' : 'text.primary',
+                  bgcolor: isActive ? 'customColors.primaryTransparent' : 'transparent',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    bgcolor: isActive ? 'customColors.primaryTransparent' : 'customColors.bgLight',
+                  },
+                }}
+              >
+                {tab.label}
+              </Box>
+            );
+          })}
         </Box>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          Workspace Settings & Preferences
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460, mx: 'auto', mb: 3 }}>
-          Configure role-based access control (RBAC), custom asset barcode patterns, and third-party integrations.
-        </Typography>
-        <AppButton variant="default">
-          Save Settings
-        </AppButton>
-      </Paper>
+
+        {/* ── Right Content Panel ─────────────────────────────────────────── */}
+        <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+          {renderActiveTabContent()}
+        </Box>
+      </Box>
+
+      {/* Snackbar notification */}
+      <Snackbar
+        open={Boolean(toastMessage)}
+        autoHideDuration={4000}
+        onClose={() => setToastMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setToastMessage(null)} severity="info" sx={{ width: '100%' }}>
+          {toastMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

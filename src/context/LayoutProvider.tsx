@@ -14,6 +14,12 @@ export function LayoutProvider({
 }: LayoutProviderProps) {
   const [activeItem, setActiveItem] = useState(defaultActiveItem);
   const [breadcrumbs, setBreadcrumbs] = useState(defaultBreadcrumbs);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+
+  const navigateToAsset = (assetId: string) => {
+    setSelectedAssetId(assetId);
+    setActiveItem('assets');
+  };
 
   return (
     <LayoutContext.Provider
@@ -22,6 +28,9 @@ export function LayoutProvider({
         setActiveItem,
         breadcrumbs,
         setBreadcrumbs,
+        selectedAssetId,
+        setSelectedAssetId,
+        navigateToAsset,
       }}
     >
       {children}

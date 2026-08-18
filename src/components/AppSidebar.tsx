@@ -323,7 +323,7 @@ export default function AppSidebar({
       </Box>
 
       {/* ── User footer ──────────────────────────────────────────────────── */}
-      <Tooltip title={collapsed ? 'Priya Sharma' : ''} placement="right">
+      <Tooltip title={collapsed ? 'Pratik Nichit' : ''} placement="right">
         <Box
           sx={{
             px: collapsed ? 1.5 : 2.5,
@@ -348,7 +348,7 @@ export default function AppSidebar({
               flexShrink: 0,
             }}
           >
-            PS
+            PN
           </Avatar>
 
           <Box
@@ -363,7 +363,7 @@ export default function AppSidebar({
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem', lineHeight: 1.3 }} noWrap>
-              Priya Sharma
+              Pratik Nichit
             </Typography>
             <Chip
               label="Admin"

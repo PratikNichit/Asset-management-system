@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
 import Chip from '@mui/material/Chip';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -34,6 +33,7 @@ import {
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import PageHeader from '../components/PageHeader';
+import AssetClickableName from '../components/AssetClickableName';
 import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
 import type { DataTableColumnDef } from '../components/DataTable';
@@ -73,21 +73,7 @@ const MAINTENANCE_COLUMNS: DataTableColumnDef<WorkOrder>[] = [
     key: 'asset',
     header: 'ASSET',
     render: (wo) => (
-      <Box>
-        <Typography sx={{ fontWeight: 600, fontSize: '0.87rem', lineHeight: 1.2 }}>
-          {wo.assetName}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: '0.72rem',
-            color: 'text.secondary',
-            mt: 0.15,
-            fontFamily: '"Roboto Mono", monospace',
-          }}
-        >
-          {wo.assetCode}
-        </Typography>
-      </Box>
+      <AssetClickableName assetId={wo.assetCode} name={wo.assetName} code={wo.assetCode} />
     ),
   },
   {

@@ -6,6 +6,7 @@ import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import PageHeader from '../components/PageHeader';
 import AssetTable from '../components/AssetTable';
+import AssetDetailView from '../components/AssetDetailView';
 import { DEFAULT_ASSET_COLUMNS } from '../types/assetColumns';
 import type { Asset } from '../types/asset';
 
@@ -32,7 +33,7 @@ const MOCK_ASSETS: Asset[] = [
     serial: 'CN0DL8JX',
     department: 'Engineering',
     location: 'HQ — Bengaluru',
-    assignedTo: 'Léa Dubois',
+    assignedTo: 'Priya Sharma',
     warrantyExpiry: '2027-03-04',
     status: 'In Use',
   },
@@ -104,7 +105,7 @@ const MOCK_ASSETS: Asset[] = [
     serial: 'SN-34C-7721',
     department: 'Design',
     location: 'HQ — Bengaluru',
-    assignedTo: 'Carlos Ruiz',
+    assignedTo: 'Marcus Chen',
     warrantyExpiry: '2027-01-20',
     status: 'In Use',
   },
@@ -127,7 +128,7 @@ const MOCK_ASSETS: Asset[] = [
     category: 'Molds',
     serial: 'MOLD-A4-22',
     department: 'Production',
-    location: 'Plant 2 — Chennai',
+    location: 'Plant 2 — Pune',
     assignedTo: null,
     warrantyExpiry: null,
     status: 'Retired',
@@ -139,8 +140,8 @@ const MOCK_ASSETS: Asset[] = [
     category: 'Forklifts',
     serial: 'CR-RC5500-11',
     department: 'Operations',
-    location: 'Warehouse B',
-    assignedTo: 'Ji-woo Kim',
+    location: 'Warehouse A',
+    assignedTo: 'Sofia Alvarez',
     warrantyExpiry: '2026-03-08',
     status: 'In Use',
   },
@@ -166,12 +167,21 @@ export interface AssetsPageProps {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AssetsPage({ organizationName = 'Atlas Industries' }: AssetsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPageProps) {
+  const { setBreadcrumbs, selectedAssetId, setSelectedAssetId } = useLayout();
+
+  const selectedAsset = useMemo(() => {
+    if (!selectedAssetId) return null;
+    return MOCK_ASSETS.find((a) => a.id === selectedAssetId || a.code === selectedAssetId) ?? null;
+  }, [selectedAssetId]);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Assets']);
-  }, [organizationName, setBreadcrumbs]);
+    if (selectedAsset) {
+      setBreadcrumbs([organizationName, 'Assets', selectedAsset.name]);
+    } else {
+      setBreadcrumbs([organizationName, 'Assets']);
+    }
+  }, [selectedAsset, organizationName, setBreadcrumbs]);
 
   const inUseCount = useMemo(
     () => MOCK_ASSETS.filter((a) => a.status === 'In Use').length,
@@ -179,15 +189,24 @@ export default function AssetsPage({ organizationName = 'Atlas Industries' }: As
   );
 
   function handleNewAsset() {
-    // TODO: open new-asset dialog / navigate to create form
     console.log('New asset clicked');
   }
 
   function handleExport() {
-    // TODO: trigger CSV export
     console.log('Export clicked');
   }
 
+  // ── Render Asset Detail View ───────────────────────────────────────────────
+  if (selectedAsset) {
+    return (
+      <AssetDetailView
+        asset={selectedAsset}
+        onBack={() => setSelectedAssetId(null)}
+      />
+    );
+  }
+
+  // ── Render Assets Table View ───────────────────────────────────────────────
   return (
     <Box>
       {/* ── Page header ───────────────────────────────────────────────────── */}
@@ -218,12 +237,13 @@ export default function AssetsPage({ organizationName = 'Atlas Industries' }: As
         }
       />
 
-      {/* ── Table — columns and search fields explicitly declared ─────────── */}
+      {/* ── Table — clicking any row opens AssetDetailView ────────────────── */}
       <AssetTable
         assets={MOCK_ASSETS}
         columns={DEFAULT_ASSET_COLUMNS}
         searchFields={['name', 'code', 'serial']}
         searchPlaceholder="Search by name, code, serial…"
+        onRowClick={(asset) => setSelectedAssetId(asset.id)}
       />
     </Box>
   );

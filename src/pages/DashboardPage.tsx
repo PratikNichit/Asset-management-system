@@ -75,7 +75,7 @@ export interface DashboardPageProps {
  * DashboardPage — Route container component for main asset management overview.
  */
 export default function DashboardPage({
-  userName = 'Priya',
+  userName = 'Pratik',
   organizationName = 'Atlas Industries',
   onNewAssetClick,
 }: DashboardPageProps) {
