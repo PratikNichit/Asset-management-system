@@ -13,4 +13,12 @@ export interface Department {
   assetsCount: number;
   /** CSS background or gradient for the 2-letter badge */
   badgeBg?: string;
+  /** Primary facility location */
+  primaryLocation?: string;
+  /** Parent organizational unit */
+  parentDepartment?: string;
+  /** Financial cost centre identifier, e.g. "CC-4021" */
+  costCenterCode?: string;
+  /** Overview of department scope and responsibility */
+  description?: string;
 }

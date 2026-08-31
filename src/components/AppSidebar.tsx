@@ -21,19 +21,18 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 const EXPANDED_WIDTH = 300;
 const COLLAPSED_WIDTH = 68;
 const TRANSITION = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
 interface NavItem { id: string; label: string; icon: React.ReactNode; }
 interface NavSection { sectionLabel: string; items: NavItem[]; }
 
 // ─── Nav config ──────────────────────────────────────────────────────────────
-
 const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: 'WORKSPACE',
@@ -64,7 +63,6 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
-
 export interface AppSidebarProps {
   /** Currently active nav item id. @default 'dashboard' */
   activeItem?: string;
@@ -75,14 +73,6 @@ export interface AppSidebarProps {
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
-
-/**
- * AppSidebar — collapsible left navigation panel.
- *
- * Expands to show labels + section headings (256px).
- * Collapses to an icon-rail (68px) with tooltips on hover.
- * The toggle button lives at the bottom-right corner of the header area.
- */
 export default function AppSidebar({
   activeItem = 'dashboard',
   onNavChange,
@@ -111,10 +101,10 @@ export default function AppSidebar({
         flexDirection: 'column',
         bgcolor: theme.palette.customColors.bgLight,
         borderRight: border,
-        overflow: 'visible',   // allow toggle button to overflow right edge
+        overflow: 'visible',
         flexShrink: 0,
-        position: 'relative',  // establish stacking context
-        zIndex: 10,            // sit above AppTopBar so toggle isn't hidden
+        position: 'relative',
+        zIndex: 10,
         transition: TRANSITION,
       }}
     >
@@ -151,7 +141,6 @@ export default function AppSidebar({
           </Avatar>
         </Tooltip>
 
-        {/* Company name — fades out when collapsed */}
         <Box
           sx={{
             flex: 1,
@@ -175,7 +164,6 @@ export default function AppSidebar({
           <KeyboardArrowDownIcon sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }} />
         )}
 
-        {/* ── Collapse / Expand toggle ── */}
         <IconButton
           size="small"
           onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c); }}
@@ -222,7 +210,6 @@ export default function AppSidebar({
       >
         {NAV_SECTIONS.map((section) => (
           <Box key={section.sectionLabel} sx={{ mb: collapsed ? 1.5 : 2 }}>
-            {/* Section label — hidden when collapsed, replaced by a divider line */}
             {collapsed ? (
               <Box sx={{ height: 1, bgcolor: theme.palette.customColors.borderLight, mx: 1, mb: 1.25, opacity: 0.6 }} />
             ) : (
@@ -277,7 +264,6 @@ export default function AppSidebar({
                       },
                     }}
                   >
-                    {/* Icon — always visible */}
                     <Box
                       sx={{
                         display: 'flex',
@@ -292,7 +278,6 @@ export default function AppSidebar({
                       {item.icon}
                     </Box>
 
-                    {/* Label — fades out when collapsed */}
                     <Box
                       sx={{
                         overflow: 'hidden',
@@ -307,7 +292,7 @@ export default function AppSidebar({
                         sx={{
                           fontWeight: isActive ? 600 : 400,
                           fontSize: '0.875rem',
-                          lineHeight: 1,
+                          lineHeight: 1.5,
                           color: 'inherit',
                         }}
                       >
@@ -323,8 +308,9 @@ export default function AppSidebar({
       </Box>
 
       {/* ── User footer ──────────────────────────────────────────────────── */}
-      <Tooltip title={collapsed ? 'Pratik Nichit' : ''} placement="right">
+      <Tooltip title={collapsed ? 'Sign Out / View Login Page' : 'Click to Log Out'} placement="right">
         <Box
+          onClick={() => handleClick('login')}
           sx={{
             px: collapsed ? 1.5 : 2.5,
             py: 2,
@@ -380,6 +366,17 @@ export default function AppSidebar({
               }}
             />
           </Box>
+
+          {!collapsed && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); handleClick('login'); }}
+              sx={{ color: theme.palette.text.secondary, '&:hover': { color: theme.palette.error.main } }}
+              title="Log Out"
+            >
+              <LogoutOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          )}
         </Box>
       </Tooltip>
     </Box>

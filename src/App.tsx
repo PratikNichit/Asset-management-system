@@ -1,6 +1,9 @@
+import { useState, useMemo } from 'react';
+import { ThemeProvider, CssBaseline } from '@mui/material';
 import { LayoutProvider } from './context/LayoutProvider';
 import { useLayout } from './hooks/useLayout';
 import AppLayout from './layouts/AppLayout';
+import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AssetsPage from './pages/AssetsPage';
 import AssignAssetPage from './pages/AssignAssetPage';
@@ -12,20 +15,42 @@ import CategoriesPage from './pages/CategoriesPage';
 import ReportsPage from './pages/ReportsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
+import { useAppSelector } from './app/hooks';
+import { selectThemeMode } from './redux/themeSlice';
+import { getAppTheme } from './theme/theme';
 
 function AppContent() {
-  const { activeItem } = useLayout();
+  const { activeItem, setActiveItem } = useLayout();
+  
+  // Check if initial URL includes login hash or path (e.g. http://localhost:5173/#login or /login)
+  const isInitialLoginUrl = window.location.hash === '#login' || window.location.pathname === '/login';
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(!isInitialLoginUrl);
+  const [isCreatingNewAsset, setIsCreatingNewAsset] = useState(false);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    if (window.location.hash === '#login') {
+      window.history.pushState(null, '', window.location.pathname);
+    }
+    setActiveItem('dashboard');
+  };
 
   const handleNewAsset = () => {
-    alert('New asset dialog triggered');
+    setIsCreatingNewAsset(true);
+    setActiveItem('assets');
   };
+
+  if (!isAuthenticated || activeItem === 'login' || window.location.hash === '#login') {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   const renderCurrentPage = () => {
     switch (activeItem) {
       case 'dashboard':
         return <DashboardPage onNewAssetClick={handleNewAsset} />;
       case 'assets':
-        return <AssetsPage />;
+        return <AssetsPage isCreatingAssetDirectly={isCreatingNewAsset} />;
       case 'assign-asset':
         return <AssignAssetPage />;
       case 'maintenance':
@@ -57,9 +82,15 @@ function AppContent() {
 }
 
 export default function App() {
+  const themeMode = useAppSelector(selectThemeMode);
+  const appTheme = useMemo(() => getAppTheme(themeMode), [themeMode]);
+
   return (
-    <LayoutProvider>
-      <AppContent />
-    </LayoutProvider>
+    <ThemeProvider theme={appTheme}>
+      <CssBaseline />
+      <LayoutProvider>
+        <AppContent />
+      </LayoutProvider>
+    </ThemeProvider>
   );
 }

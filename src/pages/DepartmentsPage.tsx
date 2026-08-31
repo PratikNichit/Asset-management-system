@@ -3,13 +3,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { selectAllDepartments, addDepartment } from '../redux/departmentsSlice';
+import { useAppSelector } from '../app/hooks';
+import { selectAllDepartments } from '../redux/departmentsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import DepartmentCard from '../components/DepartmentCard';
-import AddDepartmentModal from '../components/AddDepartmentModal';
-import type { Department } from '../types/department';
+import NewDepartmentPage from './NewDepartmentPage';
 
 export interface DepartmentsPageProps {
   organizationName?: string;
@@ -17,19 +16,28 @@ export interface DepartmentsPageProps {
 
 export default function DepartmentsPage({ organizationName = 'Atlas' }: DepartmentsPageProps) {
   const { setBreadcrumbs } = useLayout();
-  const dispatch = useAppDispatch();
   const departments = useAppSelector(selectAllDepartments);
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Departments']);
-  }, [organizationName, setBreadcrumbs]);
+    if (!isCreatingDepartment) {
+      setBreadcrumbs([organizationName, 'Departments']);
+    }
+  }, [isCreatingDepartment, organizationName, setBreadcrumbs]);
 
-  const handleAddDepartment = (newDept: Omit<Department, 'id'>) => {
-    dispatch(addDepartment(newDept));
-  };
+  // ── Render New Department Form View ─────────────────────────────────────────
+  if (isCreatingDepartment) {
+    return (
+      <NewDepartmentPage
+        organizationName={organizationName}
+        onCancel={() => setIsCreatingDepartment(false)}
+        onSuccess={() => setIsCreatingDepartment(false)}
+      />
+    );
+  }
 
+  // ── Render Departments Grid Overview ───────────────────────────────────────
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
       {/* ── Header Bar ───────────────────────────────────────────────────────── */}
@@ -45,11 +53,11 @@ export default function DepartmentsPage({ organizationName = 'Atlas' }: Departme
         <Box>
           <Typography
             variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem', color: '#0F172A' }}
           >
             Departments
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
+          <Typography variant="body2" sx={{ mt: 0.5, fontSize: '0.9rem', color: '#64748B' }}>
             Organize people and assets by team.
           </Typography>
         </Box>
@@ -58,7 +66,20 @@ export default function DepartmentsPage({ organizationName = 'Atlas' }: Departme
           variant="default"
           size="sm"
           startIcon={<AddIcon />}
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => setIsCreatingDepartment(true)}
+          sx={{
+            bgcolor: '#4F46E5',
+            borderRadius: '10px',
+            px: 2.2,
+            py: 1,
+            fontWeight: 600,
+            fontFamily: '"Manrope", sans-serif',
+            textTransform: 'none',
+            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.25)',
+            '&:hover': {
+              bgcolor: '#4338CA',
+            },
+          }}
         >
           New department
         </AppButton>
@@ -80,13 +101,6 @@ export default function DepartmentsPage({ organizationName = 'Atlas' }: Departme
           <DepartmentCard key={dept.id} department={dept} />
         ))}
       </Box>
-
-      {/* ── Add Department Modal ─────────────────────────────────────────────── */}
-      <AddDepartmentModal
-        open={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddDepartment}
-      />
     </Box>
   );
 }

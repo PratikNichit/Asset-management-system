@@ -9,17 +9,17 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import AppButton from './AppButton';
 import DataTable from './DataTable';
-import type { Asset, AssetCategory } from '../types/asset';
+import type { Asset } from '../types/asset';
 import type { AssetColumnDef } from '../types/assetColumns';
 import { DEFAULT_ASSET_COLUMNS } from '../types/assetColumns';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface CategoryTabsProps {
-  tabs: Array<{ label: string; value: AssetCategory | 'All' }>;
-  active: AssetCategory | 'All';
-  counts: Partial<Record<AssetCategory | 'All', number>>;
-  onChange: (value: AssetCategory | 'All') => void;
+  tabs: Array<{ label: string; value: string }>;
+  active: string;
+  counts: Record<string, number>;
+  onChange: (value: string) => void;
 }
 
 function CategoryTabs({ tabs, active, counts, onChange }: CategoryTabsProps) {
@@ -140,23 +140,23 @@ export default function AssetTable({
   const theme = useTheme();
 
   // ── Local UI state ──────────────────────────────────────────────────────────
-  const [activeCategory, setActiveCategory] = useState<AssetCategory | 'All'>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // ── Category tabs — derived entirely from the data ─────────────────────────
 
   const categoryTabs = useMemo(() => {
-    const seen = new Set<AssetCategory>();
+    const seen = new Set<string>();
     for (const a of assets) seen.add(a.category);
     return [
-      { label: 'All', value: 'All' as const },
+      { label: 'All', value: 'All' },
       ...[...seen].sort().map((c) => ({ label: c, value: c })),
     ];
   }, [assets]);
 
   const categoryCounts = useMemo(() => {
-    const counts: Partial<Record<AssetCategory | 'All', number>> = { All: assets.length };
+    const counts: Record<string, number> = { All: assets.length };
     for (const a of assets) counts[a.category] = (counts[a.category] ?? 0) + 1;
     return counts;
   }, [assets]);
@@ -175,7 +175,7 @@ export default function AssetTable({
 
   // ── Selection ────────────────────────────────────────────────────────────────
 
-  function handleCategoryChange(value: AssetCategory | 'All') {
+  function handleCategoryChange(value: string) {
     setActiveCategory(value);
     setSelected(new Set());
   }

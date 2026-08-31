@@ -5,6 +5,8 @@ import maintenanceReducer from '../redux/maintenanceSlice';
 import employeesReducer from '../redux/employeesSlice';
 import departmentsReducer from '../redux/departmentsSlice';
 import categoriesReducer from '../redux/categoriesSlice';
+import locationsReducer from '../redux/locationsSlice';
+import themeReducer from '../redux/themeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     employees: employeesReducer,
     departments: departmentsReducer,
     categories: categoriesReducer,
+    locations: locationsReducer,
+    theme: themeReducer,
   },
 });
 

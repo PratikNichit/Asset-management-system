@@ -1,56 +1,118 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import AddIcon from '@mui/icons-material/Add';
+
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { selectAllLocations, addLocation } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
+import LocationCard from '../components/LocationCard';
+import AddLocationModal from '../components/AddLocationModal';
+import type { LocationItem } from '../types/location';
 
 export interface LocationsPageProps {
   organizationName?: string;
 }
 
-export default function LocationsPage({ organizationName = 'Atlas Industries' }: LocationsPageProps) {
+export default function LocationsPage({ organizationName = 'Atlas' }: LocationsPageProps) {
   const { setBreadcrumbs } = useLayout();
+  const dispatch = useAppDispatch();
+  const locations = useAppSelector(selectAllLocations);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs([organizationName, 'Locations']);
   }, [organizationName, setBreadcrumbs]);
 
-  return (
-    <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif' }}>
-          Locations & Facilities
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Office buildings, warehouses, sites, and remote worker regions.
-        </Typography>
-      </Box>
+  const handleAddLocation = (newLoc: Omit<LocationItem, 'id'>) => {
+    dispatch(addLocation(newLoc));
+  };
 
-      <Paper
-        variant="outlined"
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+      {/* ── Header Bar ───────────────────────────────────────────────────────── */}
+      <Box
         sx={{
-          p: 6,
-          textAlign: 'center',
-          borderRadius: 2.5,
-          borderColor: 'customColors.borderLight',
-          bgcolor: 'customColors.white',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
         }}
       >
-        <Box sx={{ display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: '#E62C2C1A', color: '#E62C2C', mb: 2 }}>
-          <LocationOnOutlinedIcon sx={{ fontSize: 36 }} />
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontFamily: '"Manrope", sans-serif',
+              fontSize: '1.75rem',
+              color: '#0F172A',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Locations
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 0.5,
+              fontSize: '0.9rem',
+              color: '#64748B',
+              fontFamily: '"Manrope", sans-serif',
+            }}
+          >
+            Sites, buildings, warehouses & rooms.
+          </Typography>
         </Box>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          Facility & Site Management
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460, mx: 'auto', mb: 3 }}>
-          Track asset locations across branches, storage rooms, factory floors, and regional offices.
-        </Typography>
-        <AppButton variant="default">
-          Add Location
+
+        <AppButton
+          variant="default"
+          size="sm"
+          startIcon={<AddIcon />}
+          onClick={() => setIsAddModalOpen(true)}
+          sx={{
+            bgcolor: '#4F46E5',
+            borderRadius: '10px',
+            px: 2.2,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none',
+            fontFamily: '"Manrope", sans-serif',
+            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.25)',
+            '&:hover': {
+              bgcolor: '#4338CA',
+            },
+          }}
+        >
+          New location
         </AppButton>
-      </Paper>
+      </Box>
+
+      {/* ── Locations Grid ─────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(2, 1fr)',
+          },
+          gap: 3,
+        }}
+      >
+        {locations.map((location) => (
+          <LocationCard key={location.id} location={location} />
+        ))}
+      </Box>
+
+      {/* ── Add Location Modal ──────────────────────────────────────────────── */}
+      <AddLocationModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddLocation}
+      />
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import AddIcon from '@mui/icons-material/Add';
@@ -7,6 +7,7 @@ import AppButton from '../components/AppButton';
 import PageHeader from '../components/PageHeader';
 import AssetTable from '../components/AssetTable';
 import AssetDetailView from '../components/AssetDetailView';
+import NewAssetPage from './NewAssetPage';
 import { DEFAULT_ASSET_COLUMNS } from '../types/assetColumns';
 import type { Asset } from '../types/asset';
 
@@ -163,37 +164,63 @@ const MOCK_ASSETS: Asset[] = [
 
 export interface AssetsPageProps {
   organizationName?: string;
+  isCreatingAssetDirectly?: boolean;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPageProps) {
+export default function AssetsPage({ organizationName = 'Atlas', isCreatingAssetDirectly = false }: AssetsPageProps) {
   const { setBreadcrumbs, selectedAssetId, setSelectedAssetId } = useLayout();
+
+  const [assetList, setAssetList] = useState<Asset[]>(MOCK_ASSETS);
+  const [isCreatingAsset, setIsCreatingAsset] = useState(isCreatingAssetDirectly);
+
+  useEffect(() => {
+    setIsCreatingAsset(isCreatingAssetDirectly);
+  }, [isCreatingAssetDirectly]);
 
   const selectedAsset = useMemo(() => {
     if (!selectedAssetId) return null;
-    return MOCK_ASSETS.find((a) => a.id === selectedAssetId || a.code === selectedAssetId) ?? null;
-  }, [selectedAssetId]);
+    return assetList.find((a) => a.id === selectedAssetId || a.code === selectedAssetId) ?? null;
+  }, [selectedAssetId, assetList]);
 
   useEffect(() => {
-    if (selectedAsset) {
-      setBreadcrumbs([organizationName, 'Assets', selectedAsset.name]);
-    } else {
-      setBreadcrumbs([organizationName, 'Assets']);
+    if (!isCreatingAsset) {
+      if (selectedAsset) {
+        setBreadcrumbs([organizationName, 'Assets', selectedAsset.name]);
+      } else {
+        setBreadcrumbs([organizationName, 'Assets']);
+      }
     }
-  }, [selectedAsset, organizationName, setBreadcrumbs]);
+  }, [selectedAsset, isCreatingAsset, organizationName, setBreadcrumbs]);
 
   const inUseCount = useMemo(
-    () => MOCK_ASSETS.filter((a) => a.status === 'In Use').length,
-    [],
+    () => assetList.filter((a) => a.status === 'In Use').length,
+    [assetList],
   );
 
   function handleNewAsset() {
-    console.log('New asset clicked');
+    setIsCreatingAsset(true);
   }
 
   function handleExport() {
     console.log('Export clicked');
+  }
+
+  const handleAssetCreated = (newAsset: Asset) => {
+    setAssetList((prev) => [newAsset, ...prev]);
+    setIsCreatingAsset(false);
+  };
+
+  // ── Render New Asset Form View ─────────────────────────────────────────────
+  if (isCreatingAsset) {
+    return (
+      <NewAssetPage
+        organizationName={organizationName}
+        onCancel={() => setIsCreatingAsset(false)}
+        onSuccess={handleAssetCreated}
+      />
+    );
   }
 
   // ── Render Asset Detail View ───────────────────────────────────────────────
@@ -212,7 +239,7 @@ export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPagePro
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <PageHeader
         title="Assets"
-        subtitle={`${MOCK_ASSETS.length} total · ${inUseCount} in use`}
+        subtitle={`${assetList.length} total · ${inUseCount} in use`}
         actions={
           <>
             <AppButton
@@ -230,6 +257,19 @@ export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPagePro
               size="sm"
               startIcon={<AddIcon />}
               onClick={handleNewAsset}
+              sx={{
+                bgcolor: '#4F46E5',
+                borderRadius: '10px',
+                px: 2.2,
+                py: 1,
+                fontWeight: 600,
+                fontFamily: '"Manrope", sans-serif',
+                textTransform: 'none',
+                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.25)',
+                '&:hover': {
+                  bgcolor: '#4338CA',
+                },
+              }}
             >
               New asset
             </AppButton>
@@ -239,7 +279,7 @@ export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPagePro
 
       {/* ── Table — clicking any row opens AssetDetailView ────────────────── */}
       <AssetTable
-        assets={MOCK_ASSETS}
+        assets={assetList}
         columns={DEFAULT_ASSET_COLUMNS}
         searchFields={['name', 'code', 'serial']}
         searchPlaceholder="Search by name, code, serial…"

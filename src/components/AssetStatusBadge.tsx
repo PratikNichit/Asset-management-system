@@ -15,10 +15,12 @@ const STATUS_CONFIG: Record<
   AssetStatus,
   { label: string; bgKey: keyof ReturnType<typeof useStatusColors>; dotColor: string }
 > = {
-  'In Use':      { label: 'In Use',      bgKey: 'successBg', dotColor: '#20B46B' },
-  'Available':   { label: 'Available',   bgKey: 'infoBg',    dotColor: '#009BD8' },
-  'Maintenance': { label: 'Maintenance', bgKey: 'warningBg', dotColor: '#EFA831' },
-  'Retired':     { label: 'Retired',     bgKey: 'neutralBg', dotColor: '#8C929F' },
+  'In Use':            { label: 'In Use',            bgKey: 'successBg', dotColor: '#20B46B' },
+  'Available':         { label: 'Available',         bgKey: 'infoBg',    dotColor: '#009BD8' },
+  'Maintenance':       { label: 'Maintenance',       bgKey: 'warningBg', dotColor: '#EFA831' },
+  'Under Maintenance': { label: 'Under Maintenance', bgKey: 'warningBg', dotColor: '#EFA831' },
+  'Retired':           { label: 'Retired',           bgKey: 'neutralBg', dotColor: '#8C929F' },
+  'Disposed':          { label: 'Disposed',          bgKey: 'neutralBg', dotColor: '#E62C2C' },
 };
 
 function useStatusColors() {

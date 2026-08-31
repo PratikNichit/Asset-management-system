@@ -6,11 +6,15 @@ import IconButton from '@mui/material/IconButton';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
+import Tooltip from '@mui/material/Tooltip';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import AppButton from './AppButton';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { toggleTheme, selectThemeMode } from '../redux/themeSlice';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -23,16 +27,13 @@ export interface AppTopBarProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-/**
- * AppTopBar — top header bar for the Asset Management System dashboard.
- *
- * Includes breadcrumbs, global search, action icons, and a "+ New asset" CTA.
- */
 export default function AppTopBar({
   breadcrumbs = ['Atlas Industries', 'Asset Management'],
   onNewAsset,
 }: AppTopBarProps) {
   const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const themeMode = useAppSelector(selectThemeMode);
   const border = `1px solid ${theme.palette.customColors.borderLight}`;
 
   return (
@@ -135,13 +136,23 @@ export default function AppTopBar({
         >
           <NotificationsOutlinedIcon fontSize="small" />
         </IconButton>
-        <IconButton
-          size="small"
-          aria-label="theme"
-          sx={{ color: 'text.secondary', '&:hover': { bgcolor: theme.palette.customColors.bgNeutral } }}
-        >
-          <LightModeOutlinedIcon fontSize="small" />
-        </IconButton>
+
+        {/* Theme Toggle Button */}
+        <Tooltip title={themeMode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
+          <IconButton
+            size="small"
+            aria-label="toggle theme"
+            onClick={() => dispatch(toggleTheme())}
+            sx={{ color: 'text.secondary', '&:hover': { bgcolor: theme.palette.customColors.bgNeutral } }}
+          >
+            {themeMode === 'light' ? (
+              <LightModeOutlinedIcon fontSize="small" />
+            ) : (
+              <DarkModeOutlinedIcon fontSize="small" />
+            )}
+          </IconButton>
+        </Tooltip>
+
         <IconButton
           size="small"
           aria-label="settings"

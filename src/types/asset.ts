@@ -1,6 +1,6 @@
 // ─── Asset Domain Types ───────────────────────────────────────────────────────
 
-export type AssetStatus = 'In Use' | 'Available' | 'Maintenance' | 'Retired';
+export type AssetStatus = 'In Use' | 'Available' | 'Maintenance' | 'Under Maintenance' | 'Retired' | 'Disposed';
 
 export type AssetCategory =
   | 'Laptops'
@@ -8,7 +8,9 @@ export type AssetCategory =
   | 'Machines'
   | 'Molds'
   | 'Forklifts'
-  | 'Peripherals';
+  | 'Peripherals'
+  | 'Furniture'
+  | 'Software Licenses';
 
 export interface Asset {
   id: string;
@@ -16,7 +18,7 @@ export interface Asset {
   name: string;
   /** Short asset code, e.g. "AST-00184" */
   code: string;
-  category: AssetCategory;
+  category: string;
   /** Serial / barcode number */
   serial: string;
   department: string;
@@ -26,4 +28,12 @@ export interface Asset {
   /** ISO date string for warranty expiry, e.g. "2027-02-11" */
   warrantyExpiry: string | null;
   status: AssetStatus;
+  brand?: string;
+  model?: string;
+  purchaseDate?: string;
+  purchaseCost?: number;
+  vendor?: string;
+  description?: string;
+  images?: string[];
+  documents?: string[];
 }

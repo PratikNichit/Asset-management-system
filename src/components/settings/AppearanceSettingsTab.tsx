@@ -2,12 +2,22 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import AppButton from '../AppButton';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { toggleTheme, selectThemeMode } from '../../redux/themeSlice';
 
 interface AppearanceSettingsTabProps {
-  onToggleTheme: () => void;
+  onToggleTheme?: () => void;
 }
 
 export default function AppearanceSettingsTab({ onToggleTheme }: AppearanceSettingsTabProps) {
+  const dispatch = useAppDispatch();
+  const themeMode = useAppSelector(selectThemeMode);
+
+  const handleToggle = () => {
+    dispatch(toggleTheme());
+    onToggleTheme?.();
+  };
+
   return (
     <Paper
       variant="outlined"
@@ -48,16 +58,16 @@ export default function AppearanceSettingsTab({ onToggleTheme }: AppearanceSetti
         <Box>
           <Typography sx={{ fontWeight: 700, fontSize: '0.92rem' }}>Interface Theme</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.82rem', mt: 0.25 }}>
-            Currently using Light System theme.
+            Currently using {themeMode === 'light' ? 'Light' : 'Dark'} mode.
           </Typography>
         </Box>
         <AppButton
           variant="outline"
           size="sm"
-          onClick={onToggleTheme}
+          onClick={handleToggle}
           sx={{ borderColor: 'customColors.borderLight', color: 'text.primary', bgcolor: 'background.paper' }}
         >
-          Light Theme
+          {themeMode === 'light' ? 'Switch to Dark' : 'Switch to Light'}
         </AppButton>
       </Paper>
     </Paper>
