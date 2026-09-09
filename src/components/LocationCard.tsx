@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import { useTheme } from '@mui/material/styles';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
@@ -12,23 +13,32 @@ interface LocationCardProps {
 }
 
 export default function LocationCard({ location, onClick }: LocationCardProps) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const gridLineColor = isDark
+    ? 'rgba(99, 102, 241, 0.15)'
+    : 'rgba(56, 189, 248, 0.12)';
+
   return (
     <Paper
       variant="outlined"
       onClick={() => onClick?.(location)}
       sx={{
         borderRadius: 3.5,
-        borderColor: '#E2E8F0',
-        bgcolor: '#FFFFFF',
+        borderColor: theme.palette.customColors.borderLight,
+        bgcolor: theme.palette.customColors.white,
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+        boxShadow: isDark ? '0 1px 3px rgba(0, 0, 0, 0.4)' : '0 1px 3px rgba(0, 0, 0, 0.02)',
         '&:hover': {
-          boxShadow: '0 10px 28px rgba(15, 23, 42, 0.08)',
-          borderColor: '#CBD5E1',
+          boxShadow: isDark
+            ? '0 10px 28px rgba(0, 0, 0, 0.5)'
+            : '0 10px 28px rgba(15, 23, 42, 0.08)',
+          borderColor: theme.palette.primary.main,
           transform: 'translateY(-3px)',
         },
       }}
@@ -38,10 +48,10 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
         sx={{
           height: 110,
           width: '100%',
-          bgcolor: '#F3FAF9',
+          bgcolor: isDark ? 'rgba(99, 102, 241, 0.08)' : '#F3FAF9',
           backgroundImage: `
-            linear-gradient(to right, rgba(56, 189, 248, 0.12) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(56, 189, 248, 0.12) 1px, transparent 1px)
+            linear-gradient(to right, ${gridLineColor} 1px, transparent 1px),
+            linear-gradient(to bottom, ${gridLineColor} 1px, transparent 1px)
           `,
           backgroundSize: '20px 20px',
           p: 2.5,
@@ -56,21 +66,23 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 0.85,
-            bgcolor: '#FFFFFF',
+            bgcolor: theme.palette.customColors.white,
             px: 1.75,
             py: 0.75,
             borderRadius: '24px',
             border: '1px solid',
-            borderColor: 'rgba(226, 232, 240, 0.9)',
-            boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
+            borderColor: theme.palette.customColors.borderLight,
+            boxShadow: isDark
+              ? '0 2px 6px rgba(0, 0, 0, 0.3)'
+              : '0 2px 6px rgba(15, 23, 42, 0.04)',
           }}
         >
-          <PlaceOutlinedIcon sx={{ fontSize: 17, color: '#6366F1' }} />
+          <PlaceOutlinedIcon sx={{ fontSize: 17, color: theme.palette.primary.main }} />
           <Typography
             sx={{
               fontWeight: 700,
               fontSize: '0.875rem',
-              color: '#1E293B',
+              color: 'text.primary',
               fontFamily: '"Manrope", "Inter", sans-serif',
               letterSpacing: '-0.01em',
             }}
@@ -87,7 +99,7 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
           sx={{
             fontWeight: 600,
             fontSize: '0.95rem',
-            color: '#475569',
+            color: 'text.secondary',
             mb: 2.5,
             fontFamily: '"Manrope", "Inter", sans-serif',
           }}
@@ -99,7 +111,7 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2.5 }}>
           {/* Assets Metric */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, color: '#64748B' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, color: 'text.secondary' }}>
               <Inventory2OutlinedIcon sx={{ fontSize: 17 }} />
               <Typography sx={{ fontSize: '0.825rem', fontWeight: 500, color: 'inherit' }}>
                 Assets
@@ -109,7 +121,7 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
               sx={{
                 fontSize: '1.75rem',
                 fontWeight: 800,
-                color: '#0F172A',
+                color: 'text.primary',
                 fontFamily: '"Manrope", "Inter", sans-serif',
                 lineHeight: 1.1,
                 letterSpacing: '-0.02em',
@@ -121,7 +133,7 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
 
           {/* Employees Metric */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, color: '#64748B' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, color: 'text.secondary' }}>
               <PeopleOutlinedIcon sx={{ fontSize: 17 }} />
               <Typography sx={{ fontSize: '0.825rem', fontWeight: 500, color: 'inherit' }}>
                 Employees
@@ -131,7 +143,7 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
               sx={{
                 fontSize: '1.75rem',
                 fontWeight: 800,
-                color: '#0F172A',
+                color: 'text.primary',
                 fontFamily: '"Manrope", "Inter", sans-serif',
                 lineHeight: 1.1,
                 letterSpacing: '-0.02em',

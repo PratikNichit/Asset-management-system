@@ -7,6 +7,8 @@ import departmentsReducer from '../redux/departmentsSlice';
 import categoriesReducer from '../redux/categoriesSlice';
 import locationsReducer from '../redux/locationsSlice';
 import themeReducer from '../redux/themeSlice';
+import assetsReducer from '../redux/assetsSlice';
+import dashboardReducer from '../redux/dashboardSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     categories: categoriesReducer,
     locations: locationsReducer,
     theme: themeReducer,
+    assets: assetsReducer,
+    dashboard: dashboardReducer,
   },
 });
 

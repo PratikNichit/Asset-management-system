@@ -49,7 +49,7 @@ export default function LocationsPage({ organizationName = 'Atlas' }: LocationsP
               fontWeight: 800,
               fontFamily: '"Manrope", sans-serif',
               fontSize: '1.75rem',
-              color: '#0F172A',
+              color: 'text.primary',
               letterSpacing: '-0.02em',
             }}
           >
@@ -60,7 +60,7 @@ export default function LocationsPage({ organizationName = 'Atlas' }: LocationsP
             sx={{
               mt: 0.5,
               fontSize: '0.9rem',
-              color: '#64748B',
+              color: 'text.secondary',
               fontFamily: '"Manrope", sans-serif',
             }}
           >

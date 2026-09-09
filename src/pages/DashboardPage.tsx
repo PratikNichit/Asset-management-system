@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -10,60 +10,11 @@ import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import StatCard from '../components/StatCard';
 import QuickActions from '../components/QuickActions';
 import { useLayout } from '../hooks/useLayout';
+import { getGreeting } from '../utils/greeting';
+import { useAppSelector } from '../app/hooks';
+import { selectDashboardStats } from '../redux/dashboardSlice';
 
-// ─── Mock Stat Cards Data ───────────────────────────────────────────────────
-
-const DASHBOARD_STATS = [
-  {
-    label: 'Total assets',
-    value: '2,148',
-    icon: <Inventory2OutlinedIcon sx={{ fontSize: 16, color: '#5159D7' }} />,
-    iconBgColor: '#5159D71A',
-    trendValue: '4.2%',
-    trendDirection: 'up' as const,
-    trendLabel: 'vs last month',
-  },
-  {
-    label: 'Assigned',
-    value: '1,684',
-    icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 16, color: '#20B46B' }} />,
-    iconBgColor: '#20B46B26',
-    trendValue: '2.1%',
-    trendDirection: 'up' as const,
-    trendLabel: 'vs last month',
-  },
-  {
-    label: 'Available',
-    value: '342',
-    icon: <GroupsOutlinedIcon sx={{ fontSize: 16, color: '#009BD8' }} />,
-    iconBgColor: '#009BD826',
-    trendValue: '1.4%',
-    trendDirection: 'down' as const,
-    trendLabel: 'vs last month',
-  },
-  {
-    label: 'Under maintenance',
-    value: '86',
-    icon: <BuildOutlinedIcon sx={{ fontSize: 16, color: '#EFA831' }} />,
-    iconBgColor: '#EFA83133',
-    trendValue: '1.2%',
-    trendDirection: 'up' as const,
-    trendLabel: 'vs last month',
-  },
-  {
-    label: 'Warranty expiring',
-    value: '7',
-    icon: <WarningAmberOutlinedIcon sx={{ fontSize: 16, color: '#E62C2C' }} />,
-    iconBgColor: '#E62C2C26',
-    note: 'next 90 days',
-  },
-  {
-    label: 'Retired YTD',
-    value: '36',
-    icon: <ArchiveOutlinedIcon sx={{ fontSize: 16, color: '#321C00' }} />,
-    iconBgColor: '#321C0026',
-  },
-];
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface DashboardPageProps {
   userName?: string;
@@ -81,6 +32,49 @@ export default function DashboardPage({
 }: DashboardPageProps) {
   const theme = useTheme();
   const { setBreadcrumbs } = useLayout();
+  const greeting = getGreeting();
+  const statsData = useAppSelector(selectDashboardStats);
+
+  const dashboardStats = useMemo(() => {
+    return [
+      {
+        label: 'Total assets',
+        icon: <Inventory2OutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#818CF8' : '#5159D7' }} />,
+        iconBgColor: theme.palette.customColors.primaryTransparent,
+        ...statsData.total_assets,
+      },
+      {
+        label: 'Assigned',
+        icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#34D399' : '#20B46B' }} />,
+        iconBgColor: theme.palette.customColors.successTransparent,
+        ...statsData.assigned,
+      },
+      {
+        label: 'Available',
+        icon: <GroupsOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#38BDF8' : '#009BD8' }} />,
+        iconBgColor: theme.palette.customColors.infoTransparent,
+        ...statsData.available,
+      },
+      {
+        label: 'Under maintenance',
+        icon: <BuildOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#FBBF24' : '#EFA831' }} />,
+        iconBgColor: theme.palette.customColors.warningTransparent,
+        ...statsData.under_maintenance,
+      },
+      {
+        label: 'Warranty expiring',
+        icon: <WarningAmberOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#F87171' : '#E62C2C' }} />,
+        iconBgColor: theme.palette.customColors.errorTransparent,
+        ...statsData.warranty_expiring,
+      },
+      {
+        label: 'Retired YTD',
+        icon: <ArchiveOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#94A3B8' : '#321C00' }} />,
+        iconBgColor: theme.palette.customColors.bgNeutralTransparent1,
+        ...statsData.retired_ytd,
+      },
+    ];
+  }, [statsData, theme.palette.mode, theme.palette.customColors]);
 
   useEffect(() => {
     setBreadcrumbs([organizationName, 'Dashboard']);
@@ -103,7 +97,7 @@ export default function DashboardPage({
                 lineHeight: 1.3,
               }}
             >
-              Good morning, {userName}
+              {greeting}, {userName}
             </Box>
             <Box
               component="p"
@@ -170,7 +164,7 @@ export default function DashboardPage({
           mb: 3,
         }}
       >
-        {DASHBOARD_STATS.map((stat) => (
+        {dashboardStats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </Box>
