@@ -184,7 +184,7 @@ export default function NewAssetPage({
               fontWeight: 800,
               fontFamily: '"Manrope", sans-serif',
               fontSize: '1.75rem',
-              color: '#0F172A',
+              color: 'text.primary',
               letterSpacing: '-0.02em',
             }}
           >
@@ -195,7 +195,7 @@ export default function NewAssetPage({
             sx={{
               mt: 0.5,
               fontSize: '0.9rem',
-              color: '#64748B',
+              color: 'text.secondary',
               fontFamily: '"Manrope", sans-serif',
             }}
           >
@@ -211,14 +211,14 @@ export default function NewAssetPage({
               startIcon={<ArrowBackIcon sx={{ fontSize: 18 }} />}
               onClick={onCancel}
               sx={{
-                color: '#475569',
+                color: 'text.secondary',
                 fontWeight: 600,
                 fontSize: '0.9rem',
                 fontFamily: '"Manrope", sans-serif',
                 px: 1.5,
                 '&:hover': {
-                  bgcolor: '#F1F5F9',
-                  color: '#0F172A',
+                  bgcolor: 'action.hover',
+                  color: 'text.primary',
                 },
               }}
             >
@@ -233,16 +233,16 @@ export default function NewAssetPage({
               setToastMessage('Draft saved successfully.');
             }}
             sx={{
-              borderColor: '#CBD5E1',
-              color: '#334155',
+              borderColor: 'divider',
+              color: 'text.primary',
               fontWeight: 600,
               fontFamily: '"Manrope", sans-serif',
               textTransform: 'none',
               px: 2,
               py: 0.9,
               '&:hover': {
-                borderColor: '#94A3B8',
-                bgcolor: '#F8FAFC',
+                borderColor: 'text.secondary',
+                bgcolor: 'background.default',
               },
             }}
           >
@@ -254,7 +254,7 @@ export default function NewAssetPage({
             size="sm"
             onClick={() => handleSubmit(false)}
             sx={{
-              bgcolor: '#4F46E5',
+              bgcolor: 'primary.main',
               borderRadius: '10px',
               px: 2.2,
               py: 1,
@@ -263,7 +263,7 @@ export default function NewAssetPage({
               textTransform: 'none',
               boxShadow: '0 2px 8px rgba(79, 70, 229, 0.25)',
               '&:hover': {
-                bgcolor: '#4338CA',
+                bgcolor: 'primary.dark',
               },
             }}
           >
@@ -289,8 +289,8 @@ export default function NewAssetPage({
             sx={{
               p: { xs: 2.5, sm: 3.5 },
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -300,19 +300,19 @@ export default function NewAssetPage({
             <Box>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
               >
                 Basic information
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748B', fontSize: '0.85rem', mt: 0.25 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem', mt: 0.25 }}>
                 Name, category and identifiers.
               </Typography>
             </Box>
 
             {/* Asset Name */}
             <Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
-                Asset name <span style={{ color: '#EF4444' }}>*</span>
+              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
+                Asset name <span style={{ color: 'error.main' }}>*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -324,10 +324,10 @@ export default function NewAssetPage({
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     fontSize: '0.925rem',
-                    bgcolor: '#FFFFFF',
-                    '& fieldset': { borderColor: '#CBD5E1' },
-                    '&:hover fieldset': { borderColor: '#94A3B8' },
-                    '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                    bgcolor: 'background.paper',
+                    '& fieldset': { borderColor: 'divider' },
+                    '&:hover fieldset': { borderColor: 'text.secondary' },
+                    '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                   },
                 }}
               />
@@ -336,8 +336,8 @@ export default function NewAssetPage({
             {/* Row 2: Asset ID & Serial number */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
-                  Asset ID <span style={{ fontWeight: 400, color: '#64748B' }}>· Auto-generated</span>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
+                  Asset ID <span style={{ fontWeight: 400, color: 'text.secondary' }}>· Auto-generated</span>
                 </Typography>
                 <TextField
                   fullWidth
@@ -348,11 +348,11 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#F8FAFC',
-                      '& fieldset': { borderColor: '#E2E8F0' },
+                      bgcolor: 'background.default',
+                      '& fieldset': { borderColor: 'divider' },
                     },
                     '& .MuiInputBase-input.Mui-disabled': {
-                      WebkitTextFillColor: '#475569',
+                      WebkitTextFillColor: 'text.secondary',
                       fontWeight: 600,
                     },
                   }}
@@ -360,7 +360,7 @@ export default function NewAssetPage({
               </Box>
 
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Serial number
                 </Typography>
                 <TextField
@@ -373,10 +373,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
@@ -387,8 +387,8 @@ export default function NewAssetPage({
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1.2fr 1fr 1fr' }, gap: 2.5 }}>
               {/* Category Dropdown */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
-                  Category <span style={{ color: '#EF4444' }}>*</span>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
+                  Category <span style={{ color: 'error.main' }}>*</span>
                 </Typography>
                 <TextField
                   select
@@ -401,7 +401,7 @@ export default function NewAssetPage({
                       displayEmpty: true,
                       renderValue: (selected: unknown) => {
                         if (!selected || selected === '') {
-                          return <span style={{ color: '#94A3B8' }}>Select category</span>;
+                          return <span style={{ color: 'text.secondary' }}>Select category</span>;
                         }
                         return String(selected);
                       },
@@ -411,14 +411,14 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 >
-                  <MenuItem value="" sx={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                  <MenuItem value="" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
                     Select category
                   </MenuItem>
                   {categoriesList.map((cat) => (
@@ -431,7 +431,7 @@ export default function NewAssetPage({
 
               {/* Brand */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Brand
                 </Typography>
                 <TextField
@@ -443,10 +443,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
@@ -454,7 +454,7 @@ export default function NewAssetPage({
 
               {/* Model */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Model
                 </Typography>
                 <TextField
@@ -466,10 +466,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
@@ -483,8 +483,8 @@ export default function NewAssetPage({
             sx={{
               p: { xs: 2.5, sm: 3.5 },
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -494,11 +494,11 @@ export default function NewAssetPage({
             <Box>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
               >
                 Purchase & warranty
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748B', fontSize: '0.85rem', mt: 0.25 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem', mt: 0.25 }}>
                 Financial and vendor information.
               </Typography>
             </Box>
@@ -506,7 +506,7 @@ export default function NewAssetPage({
             {/* Row 1: Purchase date & Purchase cost */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Purchase date
                 </Typography>
                 <TextField
@@ -519,7 +519,7 @@ export default function NewAssetPage({
                     input: {
                       endAdornment: (
                         <InputAdornment position="end">
-                          <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#64748B' }} />
+                          <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
                         </InputAdornment>
                       ),
                     },
@@ -528,17 +528,17 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
               </Box>
 
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Purchase cost
                 </Typography>
                 <TextField
@@ -552,10 +552,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
@@ -565,7 +565,7 @@ export default function NewAssetPage({
             {/* Row 2: Vendor & Warranty until */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Vendor
                 </Typography>
                 <TextField
@@ -578,17 +578,17 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
               </Box>
 
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Warranty until
                 </Typography>
                 <TextField
@@ -601,7 +601,7 @@ export default function NewAssetPage({
                     input: {
                       endAdornment: (
                         <InputAdornment position="end">
-                          <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#64748B' }} />
+                          <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
                         </InputAdornment>
                       ),
                     },
@@ -610,10 +610,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 />
@@ -627,8 +627,8 @@ export default function NewAssetPage({
             sx={{
               p: { xs: 2.5, sm: 3.5 },
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -638,11 +638,11 @@ export default function NewAssetPage({
             <Box>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+                sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
               >
                 Assignment
               </Typography>
-              <Typography variant="body2" sx={{ color: '#64748B', fontSize: '0.85rem', mt: 0.25 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem', mt: 0.25 }}>
                 Where and to whom this asset belongs.
               </Typography>
             </Box>
@@ -651,7 +651,7 @@ export default function NewAssetPage({
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
               {/* Department */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Department
                 </Typography>
                 <TextField
@@ -665,7 +665,7 @@ export default function NewAssetPage({
                       displayEmpty: true,
                       renderValue: (selected: unknown) => {
                         if (!selected || selected === '') {
-                          return <span style={{ color: '#94A3B8' }}>Select department</span>;
+                          return <span style={{ color: 'text.secondary' }}>Select department</span>;
                         }
                         return String(selected);
                       },
@@ -675,14 +675,14 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 >
-                  <MenuItem value="" sx={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                  <MenuItem value="" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
                     Select department
                   </MenuItem>
                   {departmentsList.map((d) => (
@@ -695,7 +695,7 @@ export default function NewAssetPage({
 
               {/* Location */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Location
                 </Typography>
                 <TextField
@@ -709,7 +709,7 @@ export default function NewAssetPage({
                       displayEmpty: true,
                       renderValue: (selected: unknown) => {
                         if (!selected || selected === '') {
-                          return <span style={{ color: '#94A3B8' }}>Select location</span>;
+                          return <span style={{ color: 'text.secondary' }}>Select location</span>;
                         }
                         return String(selected);
                       },
@@ -719,14 +719,14 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 >
-                  <MenuItem value="" sx={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                  <MenuItem value="" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
                     Select location
                   </MenuItem>
                   {locationsList.map((l) => (
@@ -742,7 +742,7 @@ export default function NewAssetPage({
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
               {/* Assigned employee */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Assigned employee
                 </Typography>
                 <TextField
@@ -755,10 +755,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 >
@@ -775,7 +775,7 @@ export default function NewAssetPage({
 
               {/* Status */}
               <Box>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155', mb: 0.85 }}>
+                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary', mb: 0.85 }}>
                   Status
                 </Typography>
                 <TextField
@@ -788,10 +788,10 @@ export default function NewAssetPage({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.925rem',
-                      bgcolor: '#FFFFFF',
-                      '& fieldset': { borderColor: '#CBD5E1' },
-                      '&:hover fieldset': { borderColor: '#94A3B8' },
-                      '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                      bgcolor: 'background.paper',
+                      '& fieldset': { borderColor: 'divider' },
+                      '&:hover fieldset': { borderColor: 'text.secondary' },
+                      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                     },
                   }}
                 >
@@ -811,8 +811,8 @@ export default function NewAssetPage({
             sx={{
               p: { xs: 2.5, sm: 3.5 },
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -821,7 +821,7 @@ export default function NewAssetPage({
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
             >
               Description
             </Typography>
@@ -836,10 +836,10 @@ export default function NewAssetPage({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   fontSize: '0.925rem',
-                  bgcolor: '#FFFFFF',
-                  '& fieldset': { borderColor: '#CBD5E1' },
-                  '&:hover fieldset': { borderColor: '#94A3B8' },
-                  '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
+                  bgcolor: 'background.paper',
+                  '& fieldset': { borderColor: 'divider' },
+                  '&:hover fieldset': { borderColor: 'text.secondary' },
+                  '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
                 },
               }}
             />
@@ -854,8 +854,8 @@ export default function NewAssetPage({
             sx={{
               p: 3,
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -864,7 +864,7 @@ export default function NewAssetPage({
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
             >
               Images
             </Typography>
@@ -887,21 +887,21 @@ export default function NewAssetPage({
                 borderRadius: 2.5,
                 p: 3.5,
                 textAlign: 'center',
-                bgcolor: '#FAFAFA',
+                bgcolor: 'background.default',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 '&:hover': {
-                  borderColor: '#4F46E5',
-                  bgcolor: '#F5F3FF',
+                  borderColor: 'primary.main',
+                  bgcolor: 'action.selected',
                 },
               }}
             >
-              <ImageOutlinedIcon sx={{ fontSize: 32, color: '#64748B', mb: 1 }} />
+              <ImageOutlinedIcon sx={{ fontSize: 32, color: 'text.secondary', mb: 1 }} />
               <Typography
                 sx={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#475569',
+                  color: 'text.secondary',
                   fontFamily: '"Manrope", sans-serif',
                 }}
               >
@@ -921,8 +921,8 @@ export default function NewAssetPage({
                       height: 56,
                       borderRadius: 2,
                       overflow: 'hidden',
-                      bgcolor: '#F1F5F9',
-                      border: '1px solid #E2E8F0',
+                      bgcolor: 'action.hover',
+                      border: 1, borderColor: 'divider',
                     }}
                   >
                     <Box
@@ -944,11 +944,11 @@ export default function NewAssetPage({
                         right: 2,
                         width: 18,
                         height: 18,
-                        bgcolor: '#0F172A',
-                        color: '#FFFFFF',
+                        bgcolor: 'text.primary',
+                        color: 'background.paper',
                         p: 0,
                         '&:hover': {
-                          bgcolor: '#EF4444',
+                          bgcolor: 'error.main',
                         },
                       }}
                     >
@@ -966,8 +966,8 @@ export default function NewAssetPage({
             sx={{
               p: 3,
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -976,7 +976,7 @@ export default function NewAssetPage({
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: '#0F172A' }}
+              sx={{ fontWeight: 700, fontSize: '1.05rem', fontFamily: '"Manrope", sans-serif', color: 'text.primary' }}
             >
               Documents
             </Typography>
@@ -993,8 +993,8 @@ export default function NewAssetPage({
             <Box
               onClick={() => docInputRef.current?.click()}
               sx={{
-                bgcolor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
+                bgcolor: 'background.default',
+                border: 1, borderColor: 'divider',
                 borderRadius: 2,
                 p: 1.5,
                 px: 2,
@@ -1004,13 +1004,13 @@ export default function NewAssetPage({
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
                 '&:hover': {
-                  borderColor: '#94A3B8',
-                  bgcolor: '#F1F5F9',
+                  borderColor: 'text.secondary',
+                  bgcolor: 'action.hover',
                 },
               }}
             >
-              <FileUploadOutlinedIcon sx={{ fontSize: 20, color: '#64748B' }} />
-              <Typography sx={{ fontSize: '0.875rem', color: '#64748B', fontWeight: 400 }}>
+              <FileUploadOutlinedIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+              <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontWeight: 400 }}>
                 Upload Invoice, warranty...
               </Typography>
             </Box>
@@ -1018,7 +1018,7 @@ export default function NewAssetPage({
             {documents.length > 0 && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {documents.map((doc, i) => (
-                  <Typography key={i} sx={{ fontSize: '0.8rem', color: '#334155', fontWeight: 500 }}>
+                  <Typography key={i} sx={{ fontSize: '0.8rem', color: 'text.primary', fontWeight: 500 }}>
                     📄 {doc}
                   </Typography>
                 ))}
@@ -1032,15 +1032,15 @@ export default function NewAssetPage({
             sx={{
               p: 2.5,
               borderRadius: 3.5,
-              borderColor: '#E2E8F0',
-              bgcolor: '#FFFFFF',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
               boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
             }}
           >
             <Typography
               sx={{
                 fontSize: '0.85rem',
-                color: '#64748B',
+                color: 'text.secondary',
                 lineHeight: 1.5,
                 fontFamily: '"Manrope", sans-serif',
               }}
