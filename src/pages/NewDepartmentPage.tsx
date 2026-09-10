@@ -28,7 +28,7 @@ export default function NewDepartmentPage({
   onCancel,
   onSuccess,
 }: NewDepartmentPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
 
   const existingDepartments = useAppSelector(selectAllDepartments);
@@ -47,8 +47,12 @@ export default function NewDepartmentPage({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Departments', 'New Department']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Departments', navId: 'departments' },
+      { label: 'New Department' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

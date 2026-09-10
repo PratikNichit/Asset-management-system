@@ -28,14 +28,18 @@ const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
 ];
 
 export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const [activeTab, setActiveTab] = useState<SettingsTab>('workspace');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const tabLabel = SETTINGS_TABS.find((t) => t.id === activeTab)?.label || 'Workspace';
-    setBreadcrumbs([organizationName, 'Settings', tabLabel]);
-  }, [activeTab, organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Settings', navId: 'settings' },
+      { label: tabLabel },
+    ]);
+  }, [activeTab, organizationName, setBreadcrumbLinks]);
 
   const renderActiveTabContent = () => {
     switch (activeTab) {

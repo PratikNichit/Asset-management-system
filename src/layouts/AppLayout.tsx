@@ -16,7 +16,7 @@ export interface AppLayoutProps {
  * consuming LayoutContext for navigation and breadcrumbs state.
  */
 export default function AppLayout({ children, onNewAssetClick }: AppLayoutProps) {
-  const { activeItem, setActiveItem, breadcrumbs } = useLayout();
+  const { activeItem, setActiveItem, breadcrumbs, breadcrumbLinks } = useLayout();
 
   const handleNewAsset = () => {
     if (onNewAssetClick) {
@@ -39,6 +39,8 @@ export default function AppLayout({ children, onNewAssetClick }: AppLayoutProps)
         {/* Top Header Bar */}
         <AppTopBar
           breadcrumbs={breadcrumbs}
+          breadcrumbNavIds={breadcrumbLinks.map((c) => c.navId)}
+          onBreadcrumbClick={(navId) => setActiveItem(navId)}
           onNewAsset={handleNewAsset}
         />
 

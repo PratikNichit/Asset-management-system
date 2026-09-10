@@ -42,7 +42,7 @@ export default function NewCategoryPage({
   onCancel,
   onSuccess,
 }: NewCategoryPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
 
   // Form State
@@ -61,8 +61,12 @@ export default function NewCategoryPage({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Categories', 'New Category']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Categories', navId: 'categories' },
+      { label: 'New Category' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

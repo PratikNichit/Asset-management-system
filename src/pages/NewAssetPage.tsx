@@ -54,7 +54,7 @@ export default function NewAssetPage({
   onCancel,
   onSuccess,
 }: NewAssetPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
 
   const reduxCategories = useAppSelector(selectAllCategories);
   const reduxDepartments = useAppSelector(selectAllDepartments);
@@ -102,8 +102,12 @@ export default function NewAssetPage({
   const docInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Assets', 'New Asset']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Assets', navId: 'assets' },
+      { label: 'New Asset' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const handleRemoveImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));

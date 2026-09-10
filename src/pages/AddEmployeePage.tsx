@@ -49,7 +49,7 @@ export default function AddEmployeePage({
   onCancel,
   onSuccess,
 }: AddEmployeePageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
   const employees = useAppSelector(selectAllEmployeesList);
 
@@ -73,8 +73,12 @@ export default function AddEmployeePage({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Employees', 'Add Employee']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Employees', navId: 'employees' },
+      { label: 'Add Employee' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

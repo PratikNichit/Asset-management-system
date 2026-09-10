@@ -96,12 +96,15 @@ function renderNotificationIcon(type: NotificationType) {
 }
 
 export default function NotificationsPage({ organizationName = 'Atlas' }: NotificationsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Notifications']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Notifications' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const unreadCount = useMemo(() => {
     return notifications.filter((n) => n.isUnread).length;

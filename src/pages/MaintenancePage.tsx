@@ -170,7 +170,7 @@ export interface MaintenancePageProps {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MaintenancePage({ organizationName = 'Atlas Industries' }: MaintenancePageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
@@ -181,8 +181,11 @@ export default function MaintenancePage({ organizationName = 'Atlas Industries' 
   const statusFilter = useAppSelector(selectStatusFilter);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Maintenance']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Maintenance' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   return (
     <Box>

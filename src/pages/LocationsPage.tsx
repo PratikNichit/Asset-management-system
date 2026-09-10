@@ -16,15 +16,18 @@ export interface LocationsPageProps {
 }
 
 export default function LocationsPage({ organizationName = 'Atlas' }: LocationsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
   const locations = useAppSelector(selectAllLocations);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Locations']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Locations' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   const handleAddLocation = (newLoc: Omit<LocationItem, 'id'>) => {
     dispatch(addLocation(newLoc));

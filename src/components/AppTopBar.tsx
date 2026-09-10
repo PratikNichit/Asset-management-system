@@ -21,6 +21,10 @@ import { toggleTheme, selectThemeMode } from '../redux/themeSlice';
 export interface AppTopBarProps {
   /** Array of breadcrumb labels, left to right. @default ['Atlas Industries', 'Asset Management'] */
   breadcrumbs?: string[];
+  /** Optional navId per crumb — index matches breadcrumbs array. Non-last crumbs with a navId become clickable. */
+  breadcrumbNavIds?: (string | undefined)[];
+  /** Called with the navId when a clickable breadcrumb is clicked. */
+  onBreadcrumbClick?: (navId: string) => void;
   /** Callback for the "+ New asset" button click. */
   onNewAsset?: () => void;
 }
@@ -29,6 +33,8 @@ export interface AppTopBarProps {
 
 export default function AppTopBar({
   breadcrumbs = ['Atlas Industries', 'Asset Management'],
+  breadcrumbNavIds = [],
+  onBreadcrumbClick,
   onNewAsset,
 }: AppTopBarProps) {
   const theme = useTheme();
@@ -60,23 +66,41 @@ export default function AppTopBar({
           '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap' },
         }}
       >
-        {breadcrumbs.map((crumb, i) => (
-          <Typography
-            key={crumb}
-            variant="body2"
-            sx={{
-              fontSize: '0.875rem',
-              fontWeight: i === breadcrumbs.length - 1 ? 500 : 400,
-              color: i === breadcrumbs.length - 1 ? 'text.primary' : 'text.secondary',
-              whiteSpace: 'nowrap',
-              cursor: i < breadcrumbs.length - 1 ? 'pointer' : 'default',
-              '&:hover': i < breadcrumbs.length - 1 ? { color: 'primary.main' } : {},
-              transition: 'color 0.15s ease',
-            }}
-          >
-            {crumb}
-          </Typography>
-        ))}
+        {breadcrumbs.map((crumb, i) => {
+          const isLast = i === breadcrumbs.length - 1;
+          const navId = breadcrumbNavIds[i];
+          const isClickable = !isLast && !!navId;
+
+          return (
+            <Typography
+              key={`${crumb}-${i}`}
+              component={isClickable ? 'button' : 'span'}
+              variant="body2"
+              onClick={isClickable ? () => onBreadcrumbClick?.(navId) : undefined}
+              sx={{
+                all: isClickable ? 'unset' : undefined,
+                fontSize: '0.875rem',
+                fontWeight: isLast ? 500 : 400,
+                color: isLast ? 'text.primary' : 'text.secondary',
+                whiteSpace: 'nowrap',
+                cursor: isClickable ? 'pointer' : 'default',
+                userSelect: 'none',
+                fontFamily: 'inherit',
+                transition: 'color 0.15s ease',
+                ...(isClickable && {
+                  '&:hover': { color: 'primary.main', textDecoration: 'underline' },
+                  '&:focus-visible': {
+                    outline: `2px solid ${theme.palette.primary.main}`,
+                    outlineOffset: 2,
+                    borderRadius: 1,
+                  },
+                }),
+              }}
+            >
+              {crumb}
+            </Typography>
+          );
+        })}
       </Breadcrumbs>
 
       {/* ── Spacer ─────────────────────────────────────────────────────────── */}

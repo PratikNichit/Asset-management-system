@@ -11,11 +11,14 @@ export interface ReportsPageProps {
 }
 
 export default function ReportsPage({ organizationName = 'Atlas Industries' }: ReportsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Reports']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Reports' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   return (
     <Box>

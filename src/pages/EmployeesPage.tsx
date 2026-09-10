@@ -33,7 +33,7 @@ export interface EmployeesPageProps {
 }
 
 export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
 
   // Redux state
@@ -93,14 +93,20 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
     return map;
   }, [localAssets]);
 
-  // Update layout breadcrumbs dynamically
   useEffect(() => {
     if (selectedEmployee) {
-      setBreadcrumbs([organizationName, 'Employees', selectedEmployee.name]);
+      setBreadcrumbLinks([
+        { label: organizationName, navId: 'dashboard' },
+        { label: 'Employees', navId: 'employees' },
+        { label: selectedEmployee.name },
+      ]);
     } else {
-      setBreadcrumbs([organizationName, 'Employees']);
+      setBreadcrumbLinks([
+        { label: organizationName, navId: 'dashboard' },
+        { label: 'Employees' },
+      ]);
     }
-  }, [selectedEmployee, organizationName, setBreadcrumbs]);
+  }, [selectedEmployee, organizationName, setBreadcrumbLinks]);
 
   // Handlers
   const handleSelectEmployee = (employee: Employee) => {
