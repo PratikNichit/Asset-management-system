@@ -130,6 +130,38 @@ export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async
   }
 });
 
+export const deleteEmployeeAsync = createAsyncThunk('employees/deleteEmployeeAsync', async (employeeId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('employees').delete().eq('id', employeeId);
+      if (error) throw error;
+    }
+    return employeeId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const updateEmployeeAsync = createAsyncThunk('employees/updateEmployeeAsync', async (employee: Employee, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('employees').update({
+        name: employee.name,
+        role: employee.role,
+        department: employee.department,
+        location: employee.location,
+        email: employee.email,
+        joined_date: employee.joinedDate,
+        avatar_bg: employee.avatarBg,
+      }).eq('id', employee.id);
+      if (error) throw error;
+    }
+    return employee;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 const employeesSlice = createSlice({
   name: 'employees',
   initialState,
@@ -192,6 +224,14 @@ const employeesSlice = createSlice({
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch employees';
+      })
+      .addCase(deleteEmployeeAsync.fulfilled, (state, action) => {
+        state.list = state.list.filter((e) => e.id !== action.payload);
+        if (state.selectedEmployeeId === action.payload) state.selectedEmployeeId = null;
+      })
+      .addCase(updateEmployeeAsync.fulfilled, (state, action) => {
+        const index = state.list.findIndex((e) => e.id === action.payload.id);
+        if (index !== -1) state.list[index] = action.payload;
       });
   },
 });

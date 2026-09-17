@@ -137,6 +137,38 @@ export const fetchCategories = createAsyncThunk('categories/fetchCategories', as
   }
 });
 
+export const updateCategoryAsync = createAsyncThunk('categories/updateCategoryAsync', async (cat: AssetCategoryItem, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('categories').update({
+        name: cat.name,
+        icon: cat.iconType,
+        color: cat.bgColor,
+        asset_count: cat.assetsCount,
+        description: cat.description,
+        depreciation_method: cat.depreciationMethod,
+        useful_life_years: cat.usefulLifeYears,
+      }).eq('id', cat.id);
+      if (error) throw error;
+    }
+    return cat;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteCategoryAsync = createAsyncThunk('categories/deleteCategoryAsync', async (catId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('categories').delete().eq('id', catId);
+      if (error) throw error;
+    }
+    return catId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 const categoriesSlice = createSlice({
   name: 'categories',
   initialState,
@@ -188,6 +220,13 @@ const categoriesSlice = createSlice({
       .addCase(fetchCategories.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch categories';
+      })
+      .addCase(updateCategoryAsync.fulfilled, (state, action) => {
+        const index = state.list.findIndex((c) => c.id === action.payload.id);
+        if (index !== -1) state.list[index] = action.payload;
+      })
+      .addCase(deleteCategoryAsync.fulfilled, (state, action) => {
+        state.list = state.list.filter((c) => c.id !== action.payload);
       });
   },
 });

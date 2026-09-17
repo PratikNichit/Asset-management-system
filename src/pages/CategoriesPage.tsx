@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import AddIcon from '@mui/icons-material/Add';
 
-import { useAppSelector } from '../app/hooks';
-import { selectAllCategories } from '../redux/categoriesSlice';
+import { useAppSelector, useAppDispatch } from '../app/hooks';
+import { selectAllCategories, updateCategoryAsync, deleteCategoryAsync } from '../redux/categoriesSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import CategoryCard from '../components/CategoryCard';
 import NewCategoryPage from './NewCategoryPage';
+import EditCategoryModal from '../components/EditCategoryModal';
+import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog';
+import type { AssetCategoryItem } from '../types/category';
 
 export interface CategoriesPageProps {
   organizationName?: string;
@@ -16,9 +21,47 @@ export interface CategoriesPageProps {
 
 export default function CategoriesPage({ organizationName = 'Atlas' }: CategoriesPageProps) {
   const { setBreadcrumbLinks } = useLayout();
+  const dispatch = useAppDispatch();
   const categories = useAppSelector(selectAllCategories);
 
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<AssetCategoryItem | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<AssetCategoryItem | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>(
+    { open: false, message: '', severity: 'success' }
+  );
+
+  const handleEditCategory = (cat: AssetCategoryItem) => setEditingCategory(cat);
+  const handleDeleteCategory = (cat: AssetCategoryItem) => setDeletingCategory(cat);
+
+  const handleSaveEdit = async (updated: AssetCategoryItem) => {
+    setIsSaving(true);
+    try {
+      await dispatch(updateCategoryAsync(updated)).unwrap();
+      setEditingCategory(null);
+      setSnackbar({ open: true, message: 'Category updated successfully', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to update category', severity: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingCategory) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteCategoryAsync(deletingCategory.id)).unwrap();
+      setDeletingCategory(null);
+      setSnackbar({ open: true, message: `"${deletingCategory.name}" deleted`, severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to delete category', severity: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!isCreatingCategory) {
@@ -88,10 +131,41 @@ export default function CategoriesPage({ organizationName = 'Atlas' }: Categorie
           gap: 2.5,
         }}
       >
-        {categories.map((category) => (
-          <CategoryCard key={category.id} category={category} />
+        {categories.map((cat) => (
+          <CategoryCard
+            key={cat.id}
+            category={cat}
+            onEdit={handleEditCategory}
+            onDelete={handleDeleteCategory}
+          />
         ))}
       </Box>
+
+      {/* ── Modals & Dialogs ─────────────────────────────────────────────────── */}
+      <EditCategoryModal
+        open={Boolean(editingCategory)}
+        category={editingCategory}
+        onClose={() => setEditingCategory(null)}
+        onSave={handleSaveEdit}
+        isSaving={isSaving}
+      />
+
+      <ConfirmDeleteDialog
+        open={Boolean(deletingCategory)}
+        entityName={deletingCategory?.name}
+        onClose={() => setDeletingCategory(null)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3500}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} sx={{ borderRadius: 2 }}>{snackbar.message}</Alert>
+      </Snackbar>
     </Box>
   );
 }

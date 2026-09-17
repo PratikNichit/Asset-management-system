@@ -1,6 +1,13 @@
+import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import type { Department } from '../types/department';
@@ -8,9 +15,31 @@ import type { Department } from '../types/department';
 interface DepartmentCardProps {
   department: Department;
   onClick?: (department: Department) => void;
+  onEdit?: (department: Department) => void;
+  onDelete?: (department: Department) => void;
 }
 
-export default function DepartmentCard({ department, onClick }: DepartmentCardProps) {
+export default function DepartmentCard({ department, onClick, onEdit, onDelete }: DepartmentCardProps) {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+  };
+  const handleEdit = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+    onEdit?.(department);
+  };
+  const handleDelete = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+    onDelete?.(department);
+  };
   return (
     <Paper
       variant="outlined"
@@ -66,22 +95,60 @@ export default function DepartmentCard({ department, onClick }: DepartmentCardPr
           </Typography>
         </Box>
 
-        {/* 2-Letter Badge Code */}
-        <Box
-          sx={{
-            px: 1.5,
-            py: 0.75,
-            borderRadius: '10px',
-            background: department.badgeBg || 'linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)',
-            color: '#FFFFFF',
-            fontWeight: 800,
-            fontSize: '0.8rem',
-            letterSpacing: '0.5px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-            flexShrink: 0,
-          }}
-        >
-          {department.code}
+        {/* 2-Letter Badge Code & Actions */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              px: 1.5,
+              py: 0.75,
+              borderRadius: '10px',
+              background: department.badgeBg || 'linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)',
+              color: '#FFFFFF',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              letterSpacing: '0.5px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+              flexShrink: 0,
+            }}
+          >
+            {department.code}
+          </Box>
+          <IconButton
+            size="small"
+            onClick={handleMenuClick}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': { color: 'text.primary', bgcolor: 'rgba(0,0,0,0.04)' }
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            slotProps={{
+              paper: {
+                sx: {
+                  borderRadius: 2,
+                  mt: 0.5,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                  minWidth: 140,
+                }
+              }
+            }}
+          >
+            <MenuItem onClick={handleEdit} sx={{ fontSize: '0.875rem', gap: 1.5, py: 1 }}>
+              <EditOutlinedIcon fontSize="small" color="action" />
+              Edit
+            </MenuItem>
+            <MenuItem onClick={handleDelete} sx={{ fontSize: '0.875rem', gap: 1.5, py: 1, color: 'error.main' }}>
+              <DeleteOutlinedIcon fontSize="small" color="error" />
+              Delete
+            </MenuItem>
+          </Menu>
         </Box>
       </Box>
 

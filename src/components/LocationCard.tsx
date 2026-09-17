@@ -1,7 +1,14 @@
+import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { useTheme } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
@@ -10,9 +17,31 @@ import type { LocationItem } from '../types/location';
 interface LocationCardProps {
   location: LocationItem;
   onClick?: (location: LocationItem) => void;
+  onEdit?: (location: LocationItem) => void;
+  onDelete?: (location: LocationItem) => void;
 }
 
-export default function LocationCard({ location, onClick }: LocationCardProps) {
+export default function LocationCard({ location, onClick, onEdit, onDelete }: LocationCardProps) {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+  };
+  const handleEdit = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+    onEdit?.(location);
+  };
+  const handleDelete = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+    onDelete?.(location);
+  };
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -60,35 +89,66 @@ export default function LocationCard({ location, onClick }: LocationCardProps) {
           alignItems: 'flex-start',
         }}
       >
-        {/* Floating Location Name Pill */}
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.85,
-            bgcolor: theme.palette.customColors.white,
-            px: 1.75,
-            py: 0.75,
-            borderRadius: '24px',
-            border: '1px solid',
-            borderColor: theme.palette.customColors.borderLight,
-            boxShadow: isDark
-              ? '0 2px 6px rgba(0, 0, 0, 0.3)'
-              : '0 2px 6px rgba(15, 23, 42, 0.04)',
-          }}
-        >
-          <PlaceOutlinedIcon sx={{ fontSize: 17, color: theme.palette.primary.main }} />
-          <Typography
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
             sx={{
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              color: 'text.primary',
-              fontFamily: '"Manrope", "Inter", sans-serif',
-              letterSpacing: '-0.01em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.85,
+              bgcolor: theme.palette.customColors.white,
+              px: 1.75,
+              py: 0.75,
+              borderRadius: '24px',
+              border: '1px solid',
+              borderColor: theme.palette.customColors.borderLight,
+              boxShadow: isDark
+                ? '0 2px 6px rgba(0, 0, 0, 0.3)'
+                : '0 2px 6px rgba(15, 23, 42, 0.04)',
             }}
           >
-            {location.name}
-          </Typography>
+            <PlaceOutlinedIcon sx={{ fontSize: 17, color: theme.palette.primary.main }} />
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: '0.875rem',
+                color: 'text.primary',
+                fontFamily: '"Manrope", "Inter", sans-serif',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {location.name}
+            </Typography>
+          </Box>
+
+          <IconButton
+            size="small"
+            onClick={handleMenuClick}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': { color: 'text.primary', bgcolor: 'rgba(0,0,0,0.04)' }
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            slotProps={{
+              paper: { sx: { borderRadius: 2, mt: 0.5, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', minWidth: 140 } }
+            }}
+          >
+            <MenuItem onClick={handleEdit} sx={{ fontSize: '0.875rem', gap: 1.5, py: 1 }}>
+              <EditOutlinedIcon fontSize="small" color="action" />
+              Edit
+            </MenuItem>
+            <MenuItem onClick={handleDelete} sx={{ fontSize: '0.875rem', gap: 1.5, py: 1, color: 'error.main' }}>
+              <DeleteOutlinedIcon fontSize="small" color="error" />
+              Delete
+            </MenuItem>
+          </Menu>
         </Box>
       </Box>
 

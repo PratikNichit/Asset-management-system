@@ -76,6 +76,36 @@ export const fetchLocations = createAsyncThunk('locations/fetchLocations', async
   }
 });
 
+export const updateLocationAsync = createAsyncThunk('locations/updateLocationAsync', async (loc: LocationItem, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('locations').update({
+        name: loc.name,
+        address: loc.address,
+        type: loc.type,
+        asset_count: loc.assetsCount,
+        employee_count: loc.employeesCount,
+      }).eq('id', loc.id);
+      if (error) throw error;
+    }
+    return loc;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteLocationAsync = createAsyncThunk('locations/deleteLocationAsync', async (locId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('locations').delete().eq('id', locId);
+      if (error) throw error;
+    }
+    return locId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 const locationsSlice = createSlice({
   name: 'locations',
   initialState,
@@ -125,6 +155,13 @@ const locationsSlice = createSlice({
       .addCase(fetchLocations.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch locations';
+      })
+      .addCase(updateLocationAsync.fulfilled, (state, action) => {
+        const index = state.list.findIndex((l) => l.id === action.payload.id);
+        if (index !== -1) state.list[index] = action.payload;
+      })
+      .addCase(deleteLocationAsync.fulfilled, (state, action) => {
+        state.list = state.list.filter((l) => l.id !== action.payload);
       });
   },
 });

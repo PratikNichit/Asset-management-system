@@ -99,6 +99,37 @@ export const fetchDepartments = createAsyncThunk('departments/fetchDepartments',
   }
 });
 
+export const updateDepartmentAsync = createAsyncThunk('departments/updateDepartmentAsync', async (dept: Department, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('departments').update({
+        name: dept.name,
+        code: dept.code,
+        head: dept.head,
+        headcount: dept.membersCount,
+        asset_count: dept.assetsCount,
+        badge_bg: dept.badgeBg,
+      }).eq('id', dept.id);
+      if (error) throw error;
+    }
+    return dept;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteDepartmentAsync = createAsyncThunk('departments/deleteDepartmentAsync', async (deptId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('departments').delete().eq('id', deptId);
+      if (error) throw error;
+    }
+    return deptId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 const departmentsSlice = createSlice({
   name: 'departments',
   initialState,
@@ -155,6 +186,13 @@ const departmentsSlice = createSlice({
       .addCase(fetchDepartments.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch departments';
+      })
+      .addCase(updateDepartmentAsync.fulfilled, (state, action) => {
+        const index = state.list.findIndex((d) => d.id === action.payload.id);
+        if (index !== -1) state.list[index] = action.payload;
+      })
+      .addCase(deleteDepartmentAsync.fulfilled, (state, action) => {
+        state.list = state.list.filter((d) => d.id !== action.payload);
       });
   },
 });

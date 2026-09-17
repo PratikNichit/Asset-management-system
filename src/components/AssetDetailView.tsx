@@ -15,6 +15,7 @@ export interface AssetDetailViewProps {
   asset: Asset;
   onBack: () => void;
   onEdit?: (asset: Asset) => void;
+  onDelete?: (asset: Asset) => void;
   onReassign?: (asset: Asset) => void;
 }
 
@@ -24,6 +25,7 @@ export default function AssetDetailView({
   asset,
   onBack,
   onEdit,
+  onDelete,
   onReassign,
 }: AssetDetailViewProps) {
   const [activeTab, setActiveTab] = useState<AssetDetailTab>('overview');
@@ -46,7 +48,7 @@ export default function AssetDetailView({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* ── Top Header Navigation Bar ───────────────────────────────────────── */}
-      <AssetDetailHeader asset={asset} onBack={onBack} onEdit={onEdit} />
+      <AssetDetailHeader asset={asset} onBack={onBack} onEdit={onEdit} onDelete={onDelete} />
 
       {/* ── Main Content Grid (2 Columns) ─────────────────────────────────── */}
       <Box

@@ -195,6 +195,34 @@ export const fetchWorkOrders = createAsyncThunk('maintenance/fetchWorkOrders', a
   }
 });
 
+export const updateWorkOrderAsync = createAsyncThunk('maintenance/updateWorkOrderAsync', async (wo: Partial<WorkOrder> & { id: string }, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const updatePayload: Record<string, unknown> = {};
+      if (wo.status !== undefined) updatePayload.status = wo.status;
+      if (wo.costUsd !== undefined) updatePayload.cost_usd = wo.costUsd;
+      if (wo.date !== undefined) updatePayload.date = wo.date;
+      const { error } = await supabase.from('work_orders').update(updatePayload).eq('id', wo.id);
+      if (error) throw error;
+    }
+    return wo;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteWorkOrderAsync = createAsyncThunk('maintenance/deleteWorkOrderAsync', async (woId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('work_orders').delete().eq('id', woId);
+      if (error) throw error;
+    }
+    return woId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 const maintenanceSlice = createSlice({
@@ -255,6 +283,15 @@ const maintenanceSlice = createSlice({
         }]).then();
       }
     },
+    updateWorkOrder(state, action: PayloadAction<{ id: string; changes: Partial<WorkOrder> }>) {
+      const index = state.workOrders.findIndex((wo) => wo.id === action.payload.id);
+      if (index !== -1) {
+        state.workOrders[index] = { ...state.workOrders[index], ...action.payload.changes };
+      }
+    },
+    deleteWorkOrder(state, action: PayloadAction<string>) {
+      state.workOrders = state.workOrders.filter((wo) => wo.id !== action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -268,6 +305,13 @@ const maintenanceSlice = createSlice({
       .addCase(fetchWorkOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch work orders';
+      })
+      .addCase(updateWorkOrderAsync.fulfilled, (state, action) => {
+        const index = state.workOrders.findIndex((wo) => wo.id === action.payload.id);
+        if (index !== -1) state.workOrders[index] = { ...state.workOrders[index], ...action.payload };
+      })
+      .addCase(deleteWorkOrderAsync.fulfilled, (state, action) => {
+        state.workOrders = state.workOrders.filter((wo) => wo.id !== action.payload);
       });
   },
 });
@@ -279,6 +323,8 @@ export const {
   scheduleFormFieldChanged,
   scheduleFormReset,
   scheduleFormSubmitted,
+  updateWorkOrder,
+  deleteWorkOrder,
 } = maintenanceSlice.actions;
 
 // ─── Selectors ────────────────────────────────────────────────────────────────

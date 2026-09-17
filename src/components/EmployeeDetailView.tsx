@@ -9,6 +9,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
@@ -29,6 +30,7 @@ interface EmployeeDetailViewProps {
   onBack: () => void;
   onEditProfile: (employee: Employee) => void;
   onAssignAsset: (employee: Employee) => void;
+  onDelete?: (employee: Employee) => void;
 }
 
 export default function EmployeeDetailView({
@@ -37,6 +39,7 @@ export default function EmployeeDetailView({
   onBack,
   onEditProfile,
   onAssignAsset,
+  onDelete,
 }: EmployeeDetailViewProps) {
   const { navigateToAsset } = useLayout();
   const initials = getInitials(employee.name);
@@ -92,6 +95,14 @@ export default function EmployeeDetailView({
             onClick={() => onAssignAsset(employee)}
           >
             Assign asset
+          </AppButton>
+          <AppButton
+            variant="outline"
+            size="icon"
+            onClick={() => onDelete?.(employee)}
+            sx={{ borderColor: 'rgba(239,68,68,0.4)', color: 'error.main', bgcolor: 'background.paper', '&:hover': { bgcolor: 'rgba(239,68,68,0.06)', borderColor: 'error.main' } }}
+          >
+            <DeleteOutlinedIcon fontSize="small" />
           </AppButton>
         </Box>
       </Box>

@@ -216,6 +216,46 @@ export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (new
   }
 });
 
+export const updateAssetAsync = createAsyncThunk('assets/updateAssetAsync', async (asset: Asset, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('assets').update({
+        name: asset.name,
+        code: asset.code,
+        category: asset.category,
+        serial: asset.serial,
+        department: asset.department,
+        location: asset.location,
+        assigned_to: asset.assignedTo,
+        warranty_expiry: asset.warrantyExpiry,
+        status: asset.status,
+        brand: asset.brand,
+        model: asset.model,
+        purchase_date: asset.purchaseDate,
+        purchase_cost: asset.purchaseCost,
+        vendor: asset.vendor,
+        description: asset.description,
+      }).eq('id', asset.id);
+      if (error) throw error;
+    }
+    return asset;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteAssetAsync = createAsyncThunk('assets/deleteAssetAsync', async (assetId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('assets').delete().eq('id', assetId);
+      if (error) throw error;
+    }
+    return assetId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 export const assetsSlice = createSlice({
@@ -257,6 +297,13 @@ export const assetsSlice = createSlice({
         if (!exists) {
           state.items.unshift(action.payload);
         }
+      })
+      .addCase(updateAssetAsync.fulfilled, (state, action) => {
+        const index = state.items.findIndex((a) => a.id === action.payload.id);
+        if (index !== -1) state.items[index] = action.payload;
+      })
+      .addCase(deleteAssetAsync.fulfilled, (state, action) => {
+        state.items = state.items.filter((a) => a.id !== action.payload);
       });
   },
 });

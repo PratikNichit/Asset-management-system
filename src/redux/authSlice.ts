@@ -10,9 +10,19 @@ export interface AuthUser {
   name: string;
 }
 
+/** Single source of truth for where we are in the auth lifecycle.
+ *  'loading'         — Supabase has not yet resolved whether a session exists.
+ *  'authenticated'   — A valid session is present.
+ *  'unauthenticated' — No session (either never logged in, or logged out).
+ */
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
 interface AuthState {
   user: AuthUser | null;
+  status: AuthStatus;
+  /** @deprecated use status === 'authenticated' instead */
   isAuthenticated: boolean;
+  /** @deprecated use status === 'loading' instead */
   isLoading: boolean;
   error: string | null;
 }
@@ -21,6 +31,8 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
+  // Block rendering until Supabase confirms the session state.
+  status: 'loading',
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -102,8 +114,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    /**
+     * Called by the onAuthStateChange listener in App.tsx.
+     * Updates user, status, and the legacy boolean flags atomically.
+     */
     setUser(state, action: PayloadAction<AuthUser | null>) {
       state.user = action.payload;
+      state.status = action.payload ? 'authenticated' : 'unauthenticated';
       state.isAuthenticated = !!action.payload;
     },
     clearError(state) {
@@ -120,11 +137,14 @@ const authSlice = createSlice({
       .addCase(signIn.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
+        state.status = 'authenticated';
         state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(signIn.rejected, (state, action) => {
         state.isLoading = false;
+        // Keep status as 'unauthenticated' (was already loading → unauthenticated on rejection)
+        state.status = 'unauthenticated';
         state.error = (action.payload as string) ?? 'Sign in failed.';
       });
 
@@ -136,22 +156,26 @@ const authSlice = createSlice({
       .addCase(signOut.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
+        state.status = 'unauthenticated';
         state.isAuthenticated = false;
         state.error = null;
       });
 
-    // restoreSession
+    // restoreSession (used only in local/fallback mode; Supabase mode uses onAuthStateChange)
     builder
       .addCase(restoreSession.pending, (state) => {
         state.isLoading = true;
+        state.status = 'loading';
       })
       .addCase(restoreSession.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
+        state.status = action.payload ? 'authenticated' : 'unauthenticated';
         state.isAuthenticated = !!action.payload;
       })
       .addCase(restoreSession.rejected, (state) => {
         state.isLoading = false;
+        state.status = 'unauthenticated';
       });
   },
 });
@@ -160,6 +184,10 @@ export const { setUser, clearError } = authSlice.actions;
 
 // ─── Selectors ────────────────────────────────────────────────────────────────
 
+/** Primary selector — use this in RequireAuth and any gate logic. */
+export const selectAuthStatus = (state: RootState) => state.auth.status;
+
+// Legacy selectors kept for backward compatibility with existing consumers.
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
 export const selectAuthUser = (state: RootState) => state.auth.user;
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
