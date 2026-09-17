@@ -165,11 +165,15 @@ const MAINTENANCE_COLUMNS: DataTableColumnDef<WorkOrder>[] = [
 
 export interface MaintenancePageProps {
   organizationName?: string;
+  onScheduleWork?: () => void;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function MaintenancePage({ organizationName = 'Atlas Industries' }: MaintenancePageProps) {
+export default function MaintenancePage({
+  organizationName = 'Atlas Industries',
+  onScheduleWork,
+}: MaintenancePageProps) {
   const { setBreadcrumbLinks } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -199,6 +203,7 @@ export default function MaintenancePage({ organizationName = 'Atlas Industries' 
             variant="default"
             startIcon={<AddIcon />}
             sx={{ whiteSpace: 'nowrap' }}
+            onClick={onScheduleWork}
           >
             Schedule work
           </AppButton>
