@@ -15,16 +15,19 @@ export interface DepartmentsPageProps {
 }
 
 export default function DepartmentsPage({ organizationName = 'Atlas' }: DepartmentsPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const departments = useAppSelector(selectAllDepartments);
 
   const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
 
   useEffect(() => {
     if (!isCreatingDepartment) {
-      setBreadcrumbs([organizationName, 'Departments']);
+      setBreadcrumbLinks([
+        { label: organizationName, navId: 'dashboard' },
+        { label: 'Departments' },
+      ]);
     }
-  }, [isCreatingDepartment, organizationName, setBreadcrumbs]);
+  }, [isCreatingDepartment, organizationName, setBreadcrumbLinks]);
 
   // ── Render New Department Form View ─────────────────────────────────────────
   if (isCreatingDepartment) {

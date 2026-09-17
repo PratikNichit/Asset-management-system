@@ -5,6 +5,28 @@ import type { RootState } from '../app/store';
 
 export type WorkOrderType = 'Repair' | 'Preventive' | 'Calibration' | 'Inspection';
 export type WorkOrderStatus = 'Scheduled' | 'In Progress' | 'Overdue' | 'Completed';
+export type WorkOrderPriority = 'Low' | 'Medium' | 'High' | 'Critical';
+export type RecurrenceOption = 'Does not repeat' | 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Annually';
+
+// ─── Schedule Work Form State ─────────────────────────────────────────────────
+
+export interface ScheduleWorkFormState {
+  title: string;
+  assetId: string;
+  type: WorkOrderType;
+  priority: WorkOrderPriority;
+  status: WorkOrderStatus;
+  description: string;
+  recurrence: RecurrenceOption;
+  scheduledDate: string;
+  estimatedDowntimeHours: string;
+  technicianId: string;
+  vendor: string;
+  locationId: string;
+  estimatedCost: string;
+  isSubmitting: boolean;
+  isSuccess: boolean;
+}
 
 export interface WorkOrder {
   id: string;
@@ -105,11 +127,30 @@ const MOCK_WORK_ORDERS: WorkOrder[] = [
 
 // ─── Slice State ──────────────────────────────────────────────────────────────
 
+const INITIAL_SCHEDULE_FORM: ScheduleWorkFormState = {
+  title: '',
+  assetId: '',
+  type: 'Preventive',
+  priority: 'Medium',
+  status: 'Scheduled',
+  description: '',
+  recurrence: 'Does not repeat',
+  scheduledDate: '',
+  estimatedDowntimeHours: '4',
+  technicianId: '',
+  vendor: '',
+  locationId: '',
+  estimatedCost: '0.00',
+  isSubmitting: false,
+  isSuccess: false,
+};
+
 interface MaintenanceState {
   workOrders: WorkOrder[];
   typeFilter: WorkOrderType | 'All';
   statusFilter: WorkOrderStatus | 'All';
   searchQuery: string;
+  scheduleWorkForm: ScheduleWorkFormState;
 }
 
 const initialState: MaintenanceState = {
@@ -117,6 +158,7 @@ const initialState: MaintenanceState = {
   typeFilter: 'All',
   statusFilter: 'All',
   searchQuery: '',
+  scheduleWorkForm: INITIAL_SCHEDULE_FORM,
 };
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
@@ -134,11 +176,46 @@ const maintenanceSlice = createSlice({
     searchQueryChanged(state, action: PayloadAction<string>) {
       state.searchQuery = action.payload;
     },
+    scheduleFormFieldChanged(
+      state,
+      action: PayloadAction<{ field: keyof ScheduleWorkFormState; value: string }>
+    ) {
+      const { field, value } = action.payload;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (state.scheduleWorkForm as any)[field] = value;
+    },
+    scheduleFormReset(state) {
+      state.scheduleWorkForm = INITIAL_SCHEDULE_FORM;
+    },
+    scheduleFormSubmitted(state) {
+      const form = state.scheduleWorkForm;
+      const newOrder: WorkOrder = {
+        id: `WO-${String(state.workOrders.length + 1).padStart(3, '0')}`,
+        assetName: form.assetId,  // resolved to name in the selector
+        assetCode: form.assetId,
+        type: form.type,
+        date: form.scheduledDate,
+        technicianId: form.technicianId,
+        technicianName: form.technicianId,
+        technicianAvatar: form.technicianId.slice(0, 2).toUpperCase(),
+        technicianAvatarColor: '#5159D7',
+        costUsd: parseFloat(form.estimatedCost) || 0,
+        status: form.status,
+      };
+      state.workOrders.unshift(newOrder);
+      state.scheduleWorkForm = { ...INITIAL_SCHEDULE_FORM, isSuccess: true };
+    },
   },
 });
 
-export const { typeFilterChanged, statusFilterChanged, searchQueryChanged } =
-  maintenanceSlice.actions;
+export const {
+  typeFilterChanged,
+  statusFilterChanged,
+  searchQueryChanged,
+  scheduleFormFieldChanged,
+  scheduleFormReset,
+  scheduleFormSubmitted,
+} = maintenanceSlice.actions;
 
 // ─── Selectors ────────────────────────────────────────────────────────────────
 
@@ -172,6 +249,18 @@ export const selectWorkOrderCounts = (state: RootState) => {
     overdue: orders.filter((wo) => wo.status === 'Overdue').length,
     completedRecent: orders.filter((wo) => wo.status === 'Completed').length,
   };
+};
+
+// ─── Schedule Work Form Selectors ─────────────────────────────────────────────
+
+export const selectScheduleWorkForm = (state: RootState) => state.maintenance.scheduleWorkForm;
+export const selectScheduleFormCanSubmit = (state: RootState) => {
+  const f = state.maintenance.scheduleWorkForm;
+  return (
+    f.title.trim().length > 0 &&
+    f.assetId.length > 0 &&
+    f.scheduledDate.length > 0
+  );
 };
 
 export default maintenanceSlice.reducer;

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { LayoutContext } from './LayoutContext';
+import type { BreadcrumbItem } from './LayoutContext';
 
 export interface LayoutProviderProps {
   children: ReactNode;
@@ -14,11 +15,26 @@ export function LayoutProvider({
 }: LayoutProviderProps) {
   const [activeItem, setActiveItem] = useState(defaultActiveItem);
   const [breadcrumbs, setBreadcrumbs] = useState(defaultBreadcrumbs);
+  const [breadcrumbLinks, setBreadcrumbLinks] = useState<BreadcrumbItem[]>(
+    defaultBreadcrumbs.map((label) => ({ label }))
+  );
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
 
   const navigateToAsset = (assetId: string) => {
     setSelectedAssetId(assetId);
     setActiveItem('assets');
+  };
+
+  /** Sync plain labels and rich links together when plain setter is called */
+  const handleSetBreadcrumbs = (crumbs: string[]) => {
+    setBreadcrumbs(crumbs);
+    // Preserve existing navIds where the label still matches
+    setBreadcrumbLinks((prev) =>
+      crumbs.map((label) => {
+        const existing = prev.find((p) => p.label === label);
+        return existing ?? { label };
+      })
+    );
   };
 
   return (
@@ -27,7 +43,12 @@ export function LayoutProvider({
         activeItem,
         setActiveItem,
         breadcrumbs,
-        setBreadcrumbs,
+        setBreadcrumbs: handleSetBreadcrumbs,
+        breadcrumbLinks,
+        setBreadcrumbLinks: (crumbs) => {
+          setBreadcrumbLinks(crumbs);
+          setBreadcrumbs(crumbs.map((c) => c.label));
+        },
         selectedAssetId,
         setSelectedAssetId,
         navigateToAsset,

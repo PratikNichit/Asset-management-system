@@ -31,7 +31,7 @@ export default function DashboardPage({
   onNewAssetClick,
 }: DashboardPageProps) {
   const theme = useTheme();
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const greeting = getGreeting();
   const statsData = useAppSelector(selectDashboardStats);
 
@@ -77,8 +77,11 @@ export default function DashboardPage({
   }, [statsData, theme.palette.mode, theme.palette.customColors]);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Dashboard']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Dashboard' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   return (
     <Box>

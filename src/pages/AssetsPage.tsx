@@ -23,7 +23,7 @@ export interface AssetsPageProps {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AssetsPage({ organizationName = 'Atlas', isCreatingAssetDirectly = false }: AssetsPageProps) {
-  const { setBreadcrumbs, selectedAssetId, setSelectedAssetId } = useLayout();
+  const { setBreadcrumbLinks, selectedAssetId, setSelectedAssetId } = useLayout();
   const dispatch = useAppDispatch();
 
   const assetList = useAppSelector(selectAllAssets);
@@ -41,12 +41,19 @@ export default function AssetsPage({ organizationName = 'Atlas', isCreatingAsset
   useEffect(() => {
     if (!isCreatingAsset) {
       if (selectedAsset) {
-        setBreadcrumbs([organizationName, 'Assets', selectedAsset.name]);
+        setBreadcrumbLinks([
+          { label: organizationName, navId: 'dashboard' },
+          { label: 'Assets', navId: 'assets' },
+          { label: selectedAsset.name },
+        ]);
       } else {
-        setBreadcrumbs([organizationName, 'Assets']);
+        setBreadcrumbLinks([
+          { label: organizationName, navId: 'dashboard' },
+          { label: 'Assets' },
+        ]);
       }
     }
-  }, [selectedAsset, isCreatingAsset, organizationName, setBreadcrumbs]);
+  }, [selectedAsset, isCreatingAsset, organizationName, setBreadcrumbLinks]);
 
   const inUseCount = useMemo(
     () => assetList.filter((a) => a.status === 'In Use').length,

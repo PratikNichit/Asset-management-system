@@ -15,16 +15,19 @@ export interface CategoriesPageProps {
 }
 
 export default function CategoriesPage({ organizationName = 'Atlas' }: CategoriesPageProps) {
-  const { setBreadcrumbs } = useLayout();
+  const { setBreadcrumbLinks } = useLayout();
   const categories = useAppSelector(selectAllCategories);
 
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
   useEffect(() => {
     if (!isCreatingCategory) {
-      setBreadcrumbs([organizationName, 'Categories']);
+      setBreadcrumbLinks([
+        { label: organizationName, navId: 'dashboard' },
+        { label: 'Categories' },
+      ]);
     }
-  }, [isCreatingCategory, organizationName, setBreadcrumbs]);
+  }, [isCreatingCategory, organizationName, setBreadcrumbLinks]);
 
   // ── Render New Category Form View ──────────────────────────────────────────
   if (isCreatingCategory) {

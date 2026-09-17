@@ -46,7 +46,7 @@ export interface AssignAssetPageProps {
 // ─── Page (container) ─────────────────────────────────────────────────────────
 
 export default function AssignAssetPage({ organizationName = 'Atlas Industries' }: AssignAssetPageProps) {
-  const { setBreadcrumbs, navigateToAsset } = useLayout();
+  const { setBreadcrumbLinks, navigateToAsset } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
@@ -63,8 +63,11 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
   const canConfirm = useAppSelector(selectCanConfirm);
 
   useEffect(() => {
-    setBreadcrumbs([organizationName, 'Assign Asset']);
-  }, [organizationName, setBreadcrumbs]);
+    setBreadcrumbLinks([
+      { label: organizationName, navId: 'dashboard' },
+      { label: 'Assign Asset' },
+    ]);
+  }, [organizationName, setBreadcrumbLinks]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleAssetSelect = (asset: Asset) => dispatch(assetSelected(asset.id));
