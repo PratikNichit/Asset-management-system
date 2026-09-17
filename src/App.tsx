@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import AssetsPage from './pages/AssetsPage';
 import AssignAssetPage from './pages/AssignAssetPage';
 import MaintenancePage from './pages/MaintenancePage';
+import ScheduleWorkPage from './pages/ScheduleWorkPage';
 import EmployeesPage from './pages/EmployeesPage';
 import DepartmentsPage from './pages/DepartmentsPage';
 import LocationsPage from './pages/LocationsPage';
@@ -54,7 +55,9 @@ function AppContent() {
       case 'assign-asset':
         return <AssignAssetPage />;
       case 'maintenance':
-        return <MaintenancePage />;
+        return <MaintenancePage onScheduleWork={() => setActiveItem('schedule-work')} />;
+      case 'schedule-work':
+        return <ScheduleWorkPage onCancel={() => setActiveItem('maintenance')} />;
       case 'employees':
         return <EmployeesPage />;
       case 'departments':
