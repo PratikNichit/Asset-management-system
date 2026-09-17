@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -20,8 +21,9 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import { useAppDispatch } from '../app/hooks';
+import { signOut } from '../redux/authSlice';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const EXPANDED_WIDTH = 300;
@@ -29,7 +31,7 @@ const COLLAPSED_WIDTH = 68;
 const TRANSITION = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface NavItem { id: string; label: string; icon: React.ReactNode; }
+interface NavItem { id: string; label: string; icon: React.ReactNode; path: string; }
 interface NavSection { sectionLabel: string; items: NavItem[]; }
 
 // ─── Nav config ──────────────────────────────────────────────────────────────
@@ -37,54 +39,52 @@ const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: 'WORKSPACE',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: <DashboardOutlinedIcon /> },
-      { id: 'assets', label: 'Assets', icon: <Inventory2OutlinedIcon /> },
-      { id: 'assign-asset', label: 'Assign asset', icon: <AssignmentIndOutlinedIcon /> },
-      { id: 'maintenance', label: 'Maintenance', icon: <BuildOutlinedIcon /> },
+      { id: 'dashboard', label: 'Dashboard', icon: <DashboardOutlinedIcon />, path: '/dashboard' },
+      { id: 'assets', label: 'Assets', icon: <Inventory2OutlinedIcon />, path: '/assets' },
+      { id: 'assign-asset', label: 'Assign asset', icon: <AssignmentIndOutlinedIcon />, path: '/assign-asset' },
+      { id: 'maintenance', label: 'Maintenance', icon: <BuildOutlinedIcon />, path: '/maintenance' },
     ],
   },
   {
     sectionLabel: 'PEOPLE AND STRUCTURE',
     items: [
-      { id: 'employees', label: 'Employees', icon: <PeopleOutlinedIcon /> },
-      { id: 'departments', label: 'Departments', icon: <ApartmentOutlinedIcon /> },
-      { id: 'locations', label: 'Locations', icon: <LocationOnOutlinedIcon /> },
-      { id: 'categories', label: 'Categories', icon: <CategoryOutlinedIcon /> },
+      { id: 'employees', label: 'Employees', icon: <PeopleOutlinedIcon />, path: '/employees' },
+      { id: 'departments', label: 'Departments', icon: <ApartmentOutlinedIcon />, path: '/departments' },
+      { id: 'locations', label: 'Locations', icon: <LocationOnOutlinedIcon />, path: '/locations' },
+      { id: 'categories', label: 'Categories', icon: <CategoryOutlinedIcon />, path: '/categories' },
     ],
   },
   {
     sectionLabel: 'INSIGHTS',
     items: [
-      { id: 'reports', label: 'Reports', icon: <BarChartOutlinedIcon /> },
-      { id: 'notifications', label: 'Notifications', icon: <NotificationsOutlinedIcon /> },
-      { id: 'settings', label: 'Settings', icon: <SettingsOutlinedIcon /> },
+      { id: 'reports', label: 'Reports', icon: <BarChartOutlinedIcon />, path: '/reports' },
+      { id: 'notifications', label: 'Notifications', icon: <NotificationsOutlinedIcon />, path: '/notifications' },
+      { id: 'settings', label: 'Settings', icon: <SettingsOutlinedIcon />, path: '/settings' },
     ],
   },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 export interface AppSidebarProps {
-  /** Currently active nav item id. @default 'dashboard' */
-  activeItem?: string;
-  /** Callback when a nav item is clicked. */
-  onNavChange?: (id: string) => void;
-  /** Start the sidebar in collapsed state. @default false */
   defaultCollapsed?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
-export default function AppSidebar({
-  activeItem = 'dashboard',
-  onNavChange,
-  defaultCollapsed = false,
-}: AppSidebarProps) {
+export default function AppSidebar({ defaultCollapsed = false }: AppSidebarProps) {
   const theme = useTheme();
-  const [active, setActive] = useState(activeItem);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
-  function handleClick(id: string) {
-    setActive(id);
-    onNavChange?.(id);
+  /** Derive the active nav item from the current URL path */
+  const activeId = NAV_SECTIONS.flatMap((s) => s.items).find((item) => {
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+  })?.id ?? 'dashboard';
+
+  async function handleLogout() {
+    await dispatch(signOut());
+    navigate('/login');
   }
 
   const border = `1px solid ${theme.palette.customColors.borderLight}`;
@@ -124,22 +124,20 @@ export default function AppSidebar({
           justifyContent: collapsed ? 'center' : 'flex-start',
         }}
       >
-        <Tooltip title={collapsed ? 'Atlas Industries' : ''} placement="right">
-          <Avatar
-            sx={{
-              width: 36,
-              height: 36,
-              bgcolor: theme.palette.primary.main,
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              fontFamily: '"Manrope", sans-serif',
-              flexShrink: 0,
-              transition: 'all 0.25s',
-            }}
-          >
-            AI
-          </Avatar>
-        </Tooltip>
+        <Avatar
+          sx={{
+            width: 36,
+            height: 36,
+            bgcolor: theme.palette.primary.main,
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            fontFamily: '"Manrope", sans-serif',
+            flexShrink: 0,
+            transition: 'all 0.25s',
+          }}
+        >
+          AI
+        </Avatar>
 
         <Box
           sx={{
@@ -234,16 +232,14 @@ export default function AppSidebar({
             )}
 
             {section.items.map((item) => {
-              const isActive = active === item.id;
-              return (
-                <Tooltip
+              const isActive = activeId === item.id;
+              const linkContent = (
+                <Link
                   key={item.id}
-                  title={collapsed ? item.label : ''}
-                  placement="right"
-                  arrow
+                  to={item.path}
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                 >
                   <Box
-                    onClick={() => handleClick(item.id)}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -300,85 +296,93 @@ export default function AppSidebar({
                       </Typography>
                     </Box>
                   </Box>
-                </Tooltip>
+                </Link>
               );
+
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.id} title={item.label} placement="right" arrow>
+                    <div>{linkContent}</div>
+                  </Tooltip>
+                );
+              }
+
+              return linkContent;
             })}
           </Box>
         ))}
       </Box>
 
       {/* ── User footer ──────────────────────────────────────────────────── */}
-      <Tooltip title={collapsed ? 'Sign Out / View Login Page' : 'Click to Log Out'} placement="right">
-        <Box
-          onClick={() => handleClick('login')}
+      <Box
+        onClick={handleLogout}
+        sx={{
+          px: collapsed ? 1.5 : 2.5,
+          py: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          gap: 1.5,
+          borderTop: border,
+          cursor: 'pointer',
+          transition: 'all 0.25s ease',
+          '&:hover': { bgcolor: theme.palette.customColors.bgNeutral },
+        }}
+      >
+        <Avatar
           sx={{
-            px: collapsed ? 1.5 : 2.5,
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            gap: 1.5,
-            borderTop: border,
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            '&:hover': { bgcolor: theme.palette.customColors.bgNeutral },
+            width: 34,
+            height: 34,
+            bgcolor: theme.palette.primary.main,
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            flexShrink: 0,
           }}
         >
-          <Avatar
-            sx={{
-              width: 34,
-              height: 34,
-              bgcolor: theme.palette.primary.main,
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            PN
-          </Avatar>
+          PN
+        </Avatar>
 
-          <Box
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            opacity: collapsed ? 0 : 1,
+            maxWidth: collapsed ? 0 : 200,
+            transition: 'opacity 0.2s ease, max-width 0.25s ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem', lineHeight: 1.3 }} noWrap>
+            Pratik Nichit
+          </Typography>
+          <Chip
+            label="Admin"
+            size="small"
             sx={{
-              flex: 1,
-              minWidth: 0,
-              overflow: 'hidden',
-              opacity: collapsed ? 0 : 1,
-              maxWidth: collapsed ? 0 : 200,
-              transition: 'opacity 0.2s ease, max-width 0.25s ease',
-              whiteSpace: 'nowrap',
+              height: 18,
+              fontSize: '0.65rem',
+              fontWeight: 600,
+              bgcolor: theme.palette.customColors.primaryTransparent,
+              color: theme.palette.primary.main,
+              '& .MuiChip-label': { px: 0.75 },
+              borderRadius: 0.75,
+              mt: 0.25,
             }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem', lineHeight: 1.3 }} noWrap>
-              Pratik Nichit
-            </Typography>
-            <Chip
-              label="Admin"
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                bgcolor: theme.palette.customColors.primaryTransparent,
-                color: theme.palette.primary.main,
-                '& .MuiChip-label': { px: 0.75 },
-                borderRadius: 0.75,
-                mt: 0.25,
-              }}
-            />
-          </Box>
-
-          {!collapsed && (
-            <IconButton
-              size="small"
-              onClick={(e) => { e.stopPropagation(); handleClick('login'); }}
-              sx={{ color: theme.palette.text.secondary, '&:hover': { color: theme.palette.error.main } }}
-              title="Log Out"
-            >
-              <LogoutOutlinedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          )}
+          />
         </Box>
-      </Tooltip>
+
+        {!collapsed && (
+          <IconButton
+            size="small"
+            onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+            sx={{ color: theme.palette.text.secondary, '&:hover': { color: theme.palette.error.main } }}
+            title="Log Out"
+          >
+            <LogoutOutlinedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        )}
+      </Box>
     </Box>
   );
 }

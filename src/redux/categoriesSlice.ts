@@ -1,6 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
 import type { AssetCategoryItem } from '../types/category';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
   {
@@ -98,12 +99,43 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
 interface CategoriesState {
   list: AssetCategoryItem[];
   selectedCategoryId: string | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: CategoriesState = {
   list: INITIAL_CATEGORIES,
   selectedCategoryId: null,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchCategories = createAsyncThunk('categories/fetchCategories', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          assetsCount: row.asset_count ?? 0,
+          iconType: (row.icon as AssetCategoryItem['iconType']) || 'laptop',
+          bgColor: row.color || '#EEF2FF',
+          iconColor: '#4F46E5',
+          description: row.description || '',
+          depreciationMethod: row.depreciation_method || 'Straight line',
+          usefulLifeYears: row.useful_life_years || 3,
+        })) as AssetCategoryItem[];
+      }
+    }
+    return INITIAL_CATEGORIES;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 const categoriesSlice = createSlice({
   name: 'categories',
@@ -115,10 +147,21 @@ const categoriesSlice = createSlice({
     addCategory(state, action: PayloadAction<Omit<AssetCategoryItem, 'id'>>) {
       const nextNum = state.list.length + 1;
       const id = `CAT-${String(nextNum).padStart(3, '0')}`;
-      state.list.push({
-        id,
-        ...action.payload,
-      });
+      const newCat = { id, ...action.payload };
+      state.list.push(newCat);
+
+      if (isSupabaseConfigured()) {
+        supabase.from('categories').insert([{
+          id: newCat.id,
+          name: newCat.name,
+          icon: newCat.iconType,
+          color: newCat.bgColor,
+          asset_count: newCat.assetsCount,
+          description: newCat.description,
+          depreciation_method: newCat.depreciationMethod,
+          useful_life_years: newCat.usefulLifeYears,
+        }]).then();
+      }
     },
     updateCategory(state, action: PayloadAction<AssetCategoryItem>) {
       const index = state.list.findIndex((c) => c.id === action.payload.id);
@@ -132,6 +175,20 @@ const categoriesSlice = createSlice({
     setSelectedCategoryId(state, action: PayloadAction<string | null>) {
       state.selectedCategoryId = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch categories';
+      });
   },
 });
 

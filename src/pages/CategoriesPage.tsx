@@ -23,7 +23,7 @@ export default function CategoriesPage({ organizationName = 'Atlas' }: Categorie
   useEffect(() => {
     if (!isCreatingCategory) {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
+        { label: organizationName, path: '/dashboard' },
         { label: 'Categories' },
       ]);
     }

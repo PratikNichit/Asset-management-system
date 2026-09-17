@@ -96,13 +96,13 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
   useEffect(() => {
     if (selectedEmployee) {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
-        { label: 'Employees', navId: 'employees' },
+        { label: organizationName, path: '/dashboard' },
+        { label: 'Employees', path: '/employees' },
         { label: selectedEmployee.name },
       ]);
     } else {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
+        { label: organizationName, path: '/dashboard' },
         { label: 'Employees' },
       ]);
     }

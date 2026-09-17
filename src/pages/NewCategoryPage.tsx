@@ -62,8 +62,8 @@ export default function NewCategoryPage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Categories', navId: 'categories' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Categories', path: '/categories' },
       { label: 'New Category' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

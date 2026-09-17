@@ -1,9 +1,10 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Asset } from '../types/asset';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_ASSETS: Asset[] = [
+export const MOCK_ASSETS: Asset[] = [
   {
     id: 'AST-00184',
     name: 'MacBook Pro 16" M3',
@@ -152,11 +153,70 @@ const MOCK_ASSETS: Asset[] = [
 
 interface AssetsState {
   items: Asset[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: AssetsState = {
   items: MOCK_ASSETS,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks for Supabase ────────────────────────────────────────────────
+
+export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('assets').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          category: row.category,
+          serial: row.serial,
+          department: row.department,
+          location: row.location,
+          assignedTo: row.assigned_to,
+          warrantyExpiry: row.warranty_expiry,
+          status: row.status,
+        })) as Asset[];
+      }
+    }
+    return MOCK_ASSETS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (newAsset: Asset, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('assets').insert([
+        {
+          id: newAsset.id,
+          name: newAsset.name,
+          code: newAsset.code,
+          category: newAsset.category,
+          serial: newAsset.serial,
+          department: newAsset.department,
+          location: newAsset.location,
+          assigned_to: newAsset.assignedTo,
+          warranty_expiry: newAsset.warrantyExpiry,
+          status: newAsset.status,
+        },
+      ]);
+      if (error) throw error;
+    }
+    return newAsset;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+// ─── Slice ────────────────────────────────────────────────────────────────────
 
 export const assetsSlice = createSlice({
   name: 'assets',
@@ -166,24 +226,45 @@ export const assetsSlice = createSlice({
       state.items.unshift(action.payload);
     },
     updateAsset: (state, action: PayloadAction<Asset>) => {
-      const index = state.items.findIndex(a => a.id === action.payload.id);
+      const index = state.items.findIndex((a) => a.id === action.payload.id);
       if (index !== -1) {
         state.items[index] = action.payload;
       }
     },
     removeAsset: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(a => a.id !== action.payload);
+      state.items = state.items.filter((a) => a.id !== action.payload);
     },
     setAssets: (state, action: PayloadAction<Asset[]>) => {
       state.items = action.payload;
-    }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchAssets.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssets.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchAssets.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch assets';
+      })
+      .addCase(addAssetAsync.fulfilled, (state, action) => {
+        const exists = state.items.some((a) => a.id === action.payload.id);
+        if (!exists) {
+          state.items.unshift(action.payload);
+        }
+      });
   },
 });
 
 export const { addAsset, updateAsset, removeAsset, setAssets } = assetsSlice.actions;
 
 export const selectAllAssets = (state: { assets: AssetsState }) => state.assets.items;
-export const selectAssetById = (state: { assets: AssetsState }, assetId: string) => 
-  state.assets.items.find(a => a.id === assetId || a.code === assetId) || null;
+export const selectAssetById = (state: { assets: AssetsState }, assetId: string) =>
+  state.assets.items.find((a) => a.id === assetId || a.code === assetId) || null;
 
 export default assetsSlice.reducer;

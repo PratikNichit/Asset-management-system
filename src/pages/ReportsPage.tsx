@@ -15,7 +15,7 @@ export default function ReportsPage({ organizationName = 'Atlas Industries' }: R
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Reports' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

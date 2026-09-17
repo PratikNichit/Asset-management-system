@@ -101,7 +101,7 @@ export default function NotificationsPage({ organizationName = 'Atlas' }: Notifi
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Notifications' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

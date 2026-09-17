@@ -103,8 +103,8 @@ export default function NewAssetPage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Assets', navId: 'assets' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Assets', path: '/assets' },
       { label: 'New Asset' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

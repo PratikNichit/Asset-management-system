@@ -1,37 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import { useLayout } from '../hooks/useLayout';
-import { useAppSelector, useAppDispatch } from '../app/hooks';
+import { useAppSelector } from '../app/hooks';
 import AppButton from '../components/AppButton';
 import PageHeader from '../components/PageHeader';
 import AssetTable from '../components/AssetTable';
 import AssetDetailView from '../components/AssetDetailView';
-import NewAssetPage from './NewAssetPage';
 import { DEFAULT_ASSET_COLUMNS } from '../types/assetColumns';
-import type { Asset } from '../types/asset';
-import { selectAllAssets, addAsset } from '../redux/assetsSlice';
+import { selectAllAssets } from '../redux/assetsSlice';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface AssetsPageProps {
   organizationName?: string;
+  /** @deprecated — navigate to /assets/new directly instead */
   isCreatingAssetDirectly?: boolean;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AssetsPage({ organizationName = 'Atlas', isCreatingAssetDirectly = false }: AssetsPageProps) {
+export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPageProps) {
+  const navigate = useNavigate();
   const { setBreadcrumbLinks, selectedAssetId, setSelectedAssetId } = useLayout();
-  const dispatch = useAppDispatch();
 
   const assetList = useAppSelector(selectAllAssets);
-  const [isCreatingAsset, setIsCreatingAsset] = useState(isCreatingAssetDirectly);
-
-  useEffect(() => {
-    setIsCreatingAsset(isCreatingAssetDirectly);
-  }, [isCreatingAssetDirectly]);
 
   const selectedAsset = useMemo(() => {
     if (!selectedAssetId) return null;
@@ -39,21 +34,19 @@ export default function AssetsPage({ organizationName = 'Atlas', isCreatingAsset
   }, [selectedAssetId, assetList]);
 
   useEffect(() => {
-    if (!isCreatingAsset) {
-      if (selectedAsset) {
-        setBreadcrumbLinks([
-          { label: organizationName, navId: 'dashboard' },
-          { label: 'Assets', navId: 'assets' },
-          { label: selectedAsset.name },
-        ]);
-      } else {
-        setBreadcrumbLinks([
-          { label: organizationName, navId: 'dashboard' },
-          { label: 'Assets' },
-        ]);
-      }
+    if (selectedAsset) {
+      setBreadcrumbLinks([
+        { label: organizationName, path: '/dashboard' },
+        { label: 'Assets', path: '/assets' },
+        { label: selectedAsset.name },
+      ]);
+    } else {
+      setBreadcrumbLinks([
+        { label: organizationName, path: '/dashboard' },
+        { label: 'Assets' },
+      ]);
     }
-  }, [selectedAsset, isCreatingAsset, organizationName, setBreadcrumbLinks]);
+  }, [selectedAsset, organizationName, setBreadcrumbLinks]);
 
   const inUseCount = useMemo(
     () => assetList.filter((a) => a.status === 'In Use').length,
@@ -61,27 +54,11 @@ export default function AssetsPage({ organizationName = 'Atlas', isCreatingAsset
   );
 
   function handleNewAsset() {
-    setIsCreatingAsset(true);
+    navigate('/assets/new');
   }
 
   function handleExport() {
     console.log('Export clicked');
-  }
-
-  const handleAssetCreated = (newAsset: Asset) => {
-    dispatch(addAsset(newAsset));
-    setIsCreatingAsset(false);
-  };
-
-  // ── Render New Asset Form View ─────────────────────────────────────────────
-  if (isCreatingAsset) {
-    return (
-      <NewAssetPage
-        organizationName={organizationName}
-        onCancel={() => setIsCreatingAsset(false)}
-        onSuccess={handleAssetCreated}
-      />
-    );
   }
 
   // ── Render Asset Detail View ───────────────────────────────────────────────

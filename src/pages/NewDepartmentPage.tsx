@@ -48,8 +48,8 @@ export default function NewDepartmentPage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Departments', navId: 'departments' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Departments', path: '/departments' },
       { label: 'New Department' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

@@ -1,6 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
 import type { Department } from '../types/department';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const INITIAL_DEPARTMENTS: Department[] = [
   {
@@ -62,12 +63,41 @@ export const INITIAL_DEPARTMENTS: Department[] = [
 interface DepartmentsState {
   list: Department[];
   selectedDepartmentId: string | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: DepartmentsState = {
   list: INITIAL_DEPARTMENTS,
   selectedDepartmentId: null,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchDepartments = createAsyncThunk('departments/fetchDepartments', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          head: row.head,
+          membersCount: row.headcount ?? 0,
+          assetsCount: row.asset_count ?? 0,
+          badgeBg: row.badge_bg,
+        })) as Department[];
+      }
+    }
+    return INITIAL_DEPARTMENTS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 const departmentsSlice = createSlice({
   name: 'departments',
@@ -85,11 +115,20 @@ const departmentsSlice = createSlice({
         'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
       ];
       const badgeBg = action.payload.badgeBg || badges[Math.floor(Math.random() * badges.length)];
-      state.list.push({
-        id,
-        badgeBg,
-        ...action.payload,
-      });
+      const newDep = { id, badgeBg, ...action.payload };
+      state.list.push(newDep);
+
+      if (isSupabaseConfigured()) {
+        supabase.from('departments').insert([{
+          id: newDep.id,
+          name: newDep.name,
+          code: newDep.code,
+          head: newDep.head,
+          headcount: newDep.membersCount,
+          asset_count: newDep.assetsCount,
+          badge_bg: newDep.badgeBg,
+        }]).then();
+      }
     },
     updateDepartment(state, action: PayloadAction<Department>) {
       const index = state.list.findIndex((d) => d.id === action.payload.id);
@@ -103,6 +142,20 @@ const departmentsSlice = createSlice({
     setSelectedDepartmentId(state, action: PayloadAction<string | null>) {
       state.selectedDepartmentId = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchDepartments.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchDepartments.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchDepartments.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch departments';
+      });
   },
 });
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -30,10 +31,16 @@ export default function DashboardPage({
   organizationName = 'Atlas Industries',
   onNewAssetClick,
 }: DashboardPageProps) {
+  const navigate = useNavigate();
   const theme = useTheme();
   const { setBreadcrumbLinks } = useLayout();
   const greeting = getGreeting();
   const statsData = useAppSelector(selectDashboardStats);
+
+  const handleNewAsset = () => {
+    if (onNewAssetClick) onNewAssetClick();
+    else navigate('/assets/new');
+  };
 
   const dashboardStats = useMemo(() => {
     return [
@@ -78,7 +85,7 @@ export default function DashboardPage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Dashboard' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);
@@ -135,7 +142,7 @@ export default function DashboardPage({
             </Box>
             <Box
               component="button"
-              onClick={onNewAssetClick}
+              onClick={handleNewAsset}
               sx={{
                 px: 2,
                 py: 0.75,

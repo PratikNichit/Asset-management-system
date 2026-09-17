@@ -1,6 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
 import type { Employee } from '../types/employee';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const INITIAL_EMPLOYEES: Employee[] = [
   {
@@ -90,6 +91,8 @@ interface EmployeesState {
   selectedEmployeeId: string | null;
   searchQuery: string;
   selectedDepartment: string;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: EmployeesState = {
@@ -97,7 +100,35 @@ const initialState: EmployeesState = {
   selectedEmployeeId: null,
   searchQuery: '',
   selectedDepartment: 'all',
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('employees').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          role: row.role,
+          department: row.department,
+          location: row.location,
+          email: row.email,
+          joinedDate: row.joined_date,
+          avatarBg: row.avatar_bg,
+        })) as Employee[];
+      }
+    }
+    return INITIAL_EMPLOYEES;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 const employeesSlice = createSlice({
   name: 'employees',
@@ -111,11 +142,21 @@ const employeesSlice = createSlice({
       const id = `EMP-${String(nextNum).padStart(3, '0')}`;
       const avatarBgs = ['#2563EB', '#0284C7', '#EA580C', '#65A30D', '#0D9488', '#9333EA'];
       const avatarBg = avatarBgs[Math.floor(Math.random() * avatarBgs.length)];
-      state.list.unshift({
-        id,
-        avatarBg,
-        ...action.payload,
-      });
+      const newEmp = { id, avatarBg, ...action.payload };
+      state.list.unshift(newEmp);
+
+      if (isSupabaseConfigured()) {
+        supabase.from('employees').insert([{
+          id: newEmp.id,
+          name: newEmp.name,
+          role: newEmp.role,
+          department: newEmp.department,
+          location: newEmp.location,
+          email: newEmp.email,
+          joined_date: newEmp.joinedDate,
+          avatar_bg: newEmp.avatarBg,
+        }]).then();
+      }
     },
     updateEmployee(state, action: PayloadAction<Employee>) {
       const index = state.list.findIndex((e) => e.id === action.payload.id);
@@ -138,6 +179,20 @@ const employeesSlice = createSlice({
     setSelectedDepartment(state, action: PayloadAction<string>) {
       state.selectedDepartment = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchEmployees.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchEmployees.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchEmployees.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch employees';
+      });
   },
 });
 

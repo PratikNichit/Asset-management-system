@@ -1,17 +1,13 @@
 import { createContext } from 'react';
 
-/** A single breadcrumb entry. `navId` is the activeItem key to navigate to on click. */
+/** A single breadcrumb entry. `path` is the route path to navigate to on click. */
 export interface BreadcrumbItem {
   label: string;
-  /** If provided, clicking this crumb navigates to this activeItem. Omit for the current (last) crumb. */
-  navId?: string;
+  /** If provided, clicking this crumb navigates to this route path. Omit for the current (last) crumb. */
+  path?: string;
 }
 
 export interface LayoutContextType {
-  /** Currently active sidebar navigation item ID */
-  activeItem: string;
-  /** Function to update active navigation item */
-  setActiveItem: (id: string) => void;
   /** Breadcrumb navigation items (plain labels, for backward compat display) */
   breadcrumbs: string[];
   /** Function to update topbar breadcrumbs (plain labels only) */

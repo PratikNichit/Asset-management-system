@@ -74,8 +74,8 @@ export default function AddEmployeePage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Employees', navId: 'employees' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Employees', path: '/employees' },
       { label: 'Add Employee' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

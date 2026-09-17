@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -24,7 +25,8 @@ import ScheduleWorkSidebar from '../components/schedule-work/ScheduleWorkSidebar
 
 export interface ScheduleWorkPageProps {
   organizationName?: string;
-  onCancel: () => void;
+  /** Optional override for cancel behavior; defaults to navigate('/maintenance') */
+  onCancel?: () => void;
 }
 
 /**
@@ -35,8 +37,14 @@ export default function ScheduleWorkPage({
   organizationName = 'Atlas Industries',
   onCancel,
 }: ScheduleWorkPageProps) {
+  const navigate = useNavigate();
   const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
+
+  const handleCancel = () => {
+    if (onCancel) onCancel();
+    else navigate('/maintenance');
+  };
 
   const form = useAppSelector(selectScheduleWorkForm);
   const canSubmit = useAppSelector(selectScheduleFormCanSubmit);
@@ -46,8 +54,8 @@ export default function ScheduleWorkPage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Maintenance', navId: 'maintenance' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Maintenance', path: '/maintenance' },
       { label: 'Schedule work' },
     ]);
     dispatch(scheduleFormReset());
@@ -56,9 +64,10 @@ export default function ScheduleWorkPage({
 
   useEffect(() => {
     if (form.isSuccess) {
-      onCancel();
+      handleCancel();
     }
-  }, [form.isSuccess, onCancel]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.isSuccess]);
 
   const handleFieldChange =
     (key: keyof ScheduleWorkFormState) => (value: string) => {
@@ -103,7 +112,7 @@ export default function ScheduleWorkPage({
             id="schedule-work-cancel-btn"
             variant="outline"
             startIcon={<ArrowBackIcon />}
-            onClick={onCancel}
+            onClick={handleCancel}
           >
             Cancel
           </AppButton>
@@ -140,7 +149,7 @@ export default function ScheduleWorkPage({
           canSubmit={canSubmit}
           onFieldChange={handleFieldChange}
           onSubmit={handleSubmit}
-          onCancel={onCancel}
+          onCancel={handleCancel}
         />
       </Box>
     </Box>

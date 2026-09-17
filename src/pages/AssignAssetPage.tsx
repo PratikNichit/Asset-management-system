@@ -64,7 +64,7 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Assign Asset' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

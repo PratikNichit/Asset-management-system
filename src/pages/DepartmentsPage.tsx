@@ -23,7 +23,7 @@ export default function DepartmentsPage({ organizationName = 'Atlas' }: Departme
   useEffect(() => {
     if (!isCreatingDepartment) {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
+        { label: organizationName, path: '/dashboard' },
         { label: 'Departments' },
       ]);
     }

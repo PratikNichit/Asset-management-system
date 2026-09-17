@@ -24,7 +24,7 @@ export default function LocationsPage({ organizationName = 'Atlas' }: LocationsP
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Locations' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);

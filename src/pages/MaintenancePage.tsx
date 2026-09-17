@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
@@ -165,6 +166,7 @@ const MAINTENANCE_COLUMNS: DataTableColumnDef<WorkOrder>[] = [
 
 export interface MaintenancePageProps {
   organizationName?: string;
+  /** Optional override; defaults to navigate('/maintenance/schedule') */
   onScheduleWork?: () => void;
 }
 
@@ -174,9 +176,15 @@ export default function MaintenancePage({
   organizationName = 'Atlas Industries',
   onScheduleWork,
 }: MaintenancePageProps) {
+  const navigate = useNavigate();
   const { setBreadcrumbLinks } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
+
+  const handleScheduleWork = () => {
+    if (onScheduleWork) onScheduleWork();
+    else navigate('/maintenance/schedule');
+  };
 
   const counts = useAppSelector(selectWorkOrderCounts);
   const workOrders = useAppSelector(selectFilteredWorkOrders);
@@ -186,7 +194,7 @@ export default function MaintenancePage({
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
+      { label: organizationName, path: '/dashboard' },
       { label: 'Maintenance' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);
@@ -203,7 +211,7 @@ export default function MaintenancePage({
             variant="default"
             startIcon={<AddIcon />}
             sx={{ whiteSpace: 'nowrap' }}
-            onClick={onScheduleWork}
+            onClick={handleScheduleWork}
           >
             Schedule work
           </AppButton>

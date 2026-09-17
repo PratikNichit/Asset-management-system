@@ -1,10 +1,11 @@
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
-import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
@@ -21,10 +22,8 @@ import { toggleTheme, selectThemeMode } from '../redux/themeSlice';
 export interface AppTopBarProps {
   /** Array of breadcrumb labels, left to right. @default ['Atlas Industries', 'Asset Management'] */
   breadcrumbs?: string[];
-  /** Optional navId per crumb — index matches breadcrumbs array. Non-last crumbs with a navId become clickable. */
-  breadcrumbNavIds?: (string | undefined)[];
-  /** Called with the navId when a clickable breadcrumb is clicked. */
-  onBreadcrumbClick?: (navId: string) => void;
+  /** Optional route path per crumb — index matches breadcrumbs array. Non-last crumbs with a path become clickable. */
+  breadcrumbPaths?: (string | undefined)[];
   /** Callback for the "+ New asset" button click. */
   onNewAsset?: () => void;
 }
@@ -33,11 +32,11 @@ export interface AppTopBarProps {
 
 export default function AppTopBar({
   breadcrumbs = ['Atlas Industries', 'Asset Management'],
-  breadcrumbNavIds = [],
-  onBreadcrumbClick,
+  breadcrumbPaths = [],
   onNewAsset,
 }: AppTopBarProps) {
   const theme = useTheme();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const themeMode = useAppSelector(selectThemeMode);
   const border = `1px solid ${theme.palette.customColors.borderLight}`;
@@ -68,15 +67,15 @@ export default function AppTopBar({
       >
         {breadcrumbs.map((crumb, i) => {
           const isLast = i === breadcrumbs.length - 1;
-          const navId = breadcrumbNavIds[i];
-          const isClickable = !isLast && !!navId;
+          const path = breadcrumbPaths[i];
+          const isClickable = !isLast && !!path;
 
           return (
             <Typography
               key={`${crumb}-${i}`}
               component={isClickable ? 'button' : 'span'}
               variant="body2"
-              onClick={isClickable ? () => onBreadcrumbClick?.(navId) : undefined}
+              onClick={isClickable ? () => navigate(path!) : undefined}
               sx={{
                 all: isClickable ? 'unset' : undefined,
                 fontSize: '0.875rem',

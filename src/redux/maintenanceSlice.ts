@@ -1,5 +1,6 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // ─── Domain Types ─────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export interface WorkOrder {
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_WORK_ORDERS: WorkOrder[] = [
+export const MOCK_WORK_ORDERS: WorkOrder[] = [
   {
     id: 'WO-001',
     assetName: 'Haitian MA1200 Press',
@@ -151,6 +152,8 @@ interface MaintenanceState {
   statusFilter: WorkOrderStatus | 'All';
   searchQuery: string;
   scheduleWorkForm: ScheduleWorkFormState;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: MaintenanceState = {
@@ -159,7 +162,38 @@ const initialState: MaintenanceState = {
   statusFilter: 'All',
   searchQuery: '',
   scheduleWorkForm: INITIAL_SCHEDULE_FORM,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchWorkOrders = createAsyncThunk('maintenance/fetchWorkOrders', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('work_orders').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          assetName: row.asset_name,
+          assetCode: row.asset_code,
+          type: row.type as WorkOrderType,
+          date: row.date,
+          technicianId: row.technician_id,
+          technicianName: row.technician_name,
+          technicianAvatar: row.technician_avatar,
+          technicianAvatarColor: row.technician_avatar_color,
+          costUsd: Number(row.cost_usd),
+          status: row.status as WorkOrderStatus,
+        })) as WorkOrder[];
+      }
+    }
+    return MOCK_WORK_ORDERS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
@@ -191,7 +225,7 @@ const maintenanceSlice = createSlice({
       const form = state.scheduleWorkForm;
       const newOrder: WorkOrder = {
         id: `WO-${String(state.workOrders.length + 1).padStart(3, '0')}`,
-        assetName: form.assetId,  // resolved to name in the selector
+        assetName: form.assetId,
         assetCode: form.assetId,
         type: form.type,
         date: form.scheduledDate,
@@ -204,7 +238,37 @@ const maintenanceSlice = createSlice({
       };
       state.workOrders.unshift(newOrder);
       state.scheduleWorkForm = { ...INITIAL_SCHEDULE_FORM, isSuccess: true };
+
+      if (isSupabaseConfigured()) {
+        supabase.from('work_orders').insert([{
+          id: newOrder.id,
+          asset_name: newOrder.assetName,
+          asset_code: newOrder.assetCode,
+          type: newOrder.type,
+          date: newOrder.date,
+          technician_id: newOrder.technicianId,
+          technician_name: newOrder.technicianName,
+          technician_avatar: newOrder.technicianAvatar,
+          technician_avatar_color: newOrder.technicianAvatarColor,
+          cost_usd: newOrder.costUsd,
+          status: newOrder.status,
+        }]).then();
+      }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchWorkOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchWorkOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.workOrders = action.payload;
+      })
+      .addCase(fetchWorkOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch work orders';
+      });
   },
 });
 
