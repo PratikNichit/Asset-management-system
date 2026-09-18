@@ -1,4 +1,4 @@
-﻿import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { LayoutProvider } from './context/LayoutProvider';
@@ -34,6 +34,7 @@ import { fetchWorkOrders } from './redux/maintenanceSlice';
 import { fetchDepartments } from './redux/departmentsSlice';
 import { fetchCategories } from './redux/categoriesSlice';
 import { fetchLocations } from './redux/locationsSlice';
+import { fetchDashboardStats } from './redux/dashboardSlice';
 import { getAppTheme } from './theme/theme';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
@@ -114,6 +115,7 @@ export default function App() {
   // as 'authenticated' so they do NOT trigger redundant re-fetches.
   useEffect(() => {
     if (authStatus === 'authenticated') {
+      dispatch(fetchDashboardStats());
       dispatch(fetchAssets());
       dispatch(fetchEmployees());
       dispatch(fetchWorkOrders());

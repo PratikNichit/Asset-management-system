@@ -1,6 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
@@ -8,12 +10,20 @@ import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import QrCodeOutlinedIcon from '@mui/icons-material/QrCodeOutlined';
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import StatCard from '../components/StatCard';
 import QuickActions from '../components/QuickActions';
 import { useLayout } from '../hooks/useLayout';
 import { getGreeting } from '../utils/greeting';
-import { useAppSelector } from '../app/hooks';
-import { selectDashboardStats } from '../redux/dashboardSlice';
+import { useAppSelector, useAppDispatch } from '../app/hooks';
+import {
+  selectDashboardStats,
+  selectDashboardLoading,
+  selectDashboardError,
+  fetchDashboardStats,
+} from '../redux/dashboardSlice';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -27,19 +37,34 @@ export interface DashboardPageProps {
  * DashboardPage — Route container component for main asset management overview.
  */
 export default function DashboardPage({
-  userName = 'Pratik',
+  userName: propUserName,
   organizationName = 'Atlas Industries',
   onNewAssetClick,
 }: DashboardPageProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const theme = useTheme();
   const { setBreadcrumbLinks } = useLayout();
   const greeting = getGreeting();
-  const statsData = useAppSelector(selectDashboardStats);
 
-  const handleNewAsset = () => {
+  const authUser = useAppSelector((state) => state.auth.user);
+  const userName = propUserName || authUser?.name || 'Pratik';
+
+  const statsData = useAppSelector(selectDashboardStats);
+  const isLoading = useAppSelector(selectDashboardLoading);
+  const error = useAppSelector(selectDashboardError);
+
+  useEffect(() => {
+    dispatch(fetchDashboardStats());
+  }, [dispatch]);
+
+  const handleNewAsset = useMemo(() => () => {
     if (onNewAssetClick) onNewAssetClick();
     else navigate('/assets/new');
+  }, [onNewAssetClick, navigate]);
+
+  const handleRefresh = () => {
+    dispatch(fetchDashboardStats());
   };
 
   const dashboardStats = useMemo(() => {
@@ -48,40 +73,73 @@ export default function DashboardPage({
         label: 'Total assets',
         icon: <Inventory2OutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#818CF8' : '#5159D7' }} />,
         iconBgColor: theme.palette.customColors.primaryTransparent,
+        isLoading,
         ...statsData.total_assets,
       },
       {
         label: 'Assigned',
         icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#34D399' : '#20B46B' }} />,
         iconBgColor: theme.palette.customColors.successTransparent,
+        isLoading,
         ...statsData.assigned,
       },
       {
         label: 'Available',
         icon: <GroupsOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#38BDF8' : '#009BD8' }} />,
         iconBgColor: theme.palette.customColors.infoTransparent,
+        isLoading,
         ...statsData.available,
       },
       {
         label: 'Under maintenance',
         icon: <BuildOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#FBBF24' : '#EFA831' }} />,
         iconBgColor: theme.palette.customColors.warningTransparent,
+        isLoading,
         ...statsData.under_maintenance,
       },
       {
         label: 'Warranty expiring',
         icon: <WarningAmberOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#F87171' : '#E62C2C' }} />,
         iconBgColor: theme.palette.customColors.errorTransparent,
+        isLoading,
         ...statsData.warranty_expiring,
       },
       {
         label: 'Retired YTD',
         icon: <ArchiveOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#94A3B8' : '#321C00' }} />,
         iconBgColor: theme.palette.customColors.bgNeutralTransparent1,
+        isLoading,
         ...statsData.retired_ytd,
       },
     ];
-  }, [statsData, theme.palette.mode, theme.palette.customColors]);
+  }, [statsData, isLoading, theme.palette.mode, theme.palette.customColors]);
+
+  const quickActionsList = useMemo(() => [
+    {
+      id: 'add-asset',
+      label: 'Add new asset',
+      icon: <AddCircleOutlinedIcon fontSize="small" />,
+      onClick: handleNewAsset,
+    },
+    {
+      id: 'assign',
+      label: 'Assign to employee',
+      icon: <AssignmentIndOutlinedIcon fontSize="small" />,
+      onClick: () => navigate('/assign-asset'),
+    },
+    {
+      id: 'maintenance',
+      label: 'Schedule maintenance',
+      icon: <BuildOutlinedIcon fontSize="small" />,
+      onClick: () => navigate('/maintenance/schedule'),
+    },
+    {
+      id: 'qr',
+      label: 'Generate QR labels',
+      icon: <QrCodeOutlinedIcon fontSize="small" />,
+      onClick: () => navigate('/assets'),
+    },
+  ], [handleNewAsset, navigate]);
 
   useEffect(() => {
     setBreadcrumbLinks([
@@ -92,6 +150,21 @@ export default function DashboardPage({
 
   return (
     <Box>
+      {/* ── Error Banner if Fetch Fails ──────────────────────────────────── */}
+      {error && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2.5, borderRadius: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={handleRefresh}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
       {/* ── Page Header ───────────────────────────────────────────────────── */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
@@ -125,6 +198,32 @@ export default function DashboardPage({
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Box
               component="button"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              title="Refresh dashboard stats"
+              sx={{
+                p: 0.75,
+                px: 1.25,
+                borderRadius: 2,
+                border: `1px solid ${theme.palette.customColors.borderLight}`,
+                bgcolor: 'transparent',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: isLoading ? 'default' : 'pointer',
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                opacity: isLoading ? 0.6 : 1,
+                '&:hover': { bgcolor: isLoading ? 'transparent' : theme.palette.customColors.bgNeutral },
+              }}
+            >
+              <RefreshOutlinedIcon sx={{ fontSize: 18, animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
+              Refresh
+            </Box>
+            <Box
+              component="button"
+              onClick={() => navigate('/reports')}
               sx={{
                 px: 2,
                 py: 0.75,
@@ -199,7 +298,7 @@ export default function DashboardPage({
                 Asset movement
               </Box>
               <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.25 }}>
-                Added vs retired, last 7 months
+                Added vs retired overview
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -227,7 +326,7 @@ export default function DashboardPage({
               ))}
             </Box>
           </Box>
-          {/* Chart area placeholder */}
+          {/* Chart area */}
           <Box
             sx={{
               flex: 1,
@@ -241,13 +340,18 @@ export default function DashboardPage({
           >
             <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
               <Box sx={{ fontSize: '2rem', mb: 0.5 }}>📈</Box>
-              <Box sx={{ fontSize: '0.75rem' }}>Chart coming soon (install recharts)</Box>
+              <Box sx={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                {statsData.total_assets.value} total assets tracked
+              </Box>
+              <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}>
+                {statsData.assigned.value} assigned &bull; {statsData.available.value} available &bull; {statsData.under_maintenance.value} maintenance
+              </Box>
             </Box>
           </Box>
         </Box>
 
         {/* Quick Actions Component */}
-        <QuickActions />
+        <QuickActions actions={quickActionsList} />
       </Box>
     </Box>
   );

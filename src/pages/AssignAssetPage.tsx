@@ -1,15 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
 import CheckIcon from '@mui/icons-material/Check';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
@@ -43,6 +45,71 @@ export interface AssignAssetPageProps {
   organizationName?: string;
 }
 
+// ─── Small helper: numbered column header, kept visually consistent
+//     with whatever step/icon/label pattern PickerPanel renders internally ───
+
+function ColumnHeader({
+  step,
+  done,
+  icon,
+  label,
+}: {
+  step: number;
+  done: boolean;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const theme = useTheme();
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          flexShrink: 0,
+          bgcolor: done ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.1),
+          color: done ? '#fff' : theme.palette.primary.main,
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {done ? <CheckIcon sx={{ fontSize: 14 }} /> : step}
+      </Box>
+      {icon}
+      <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>{label}</Typography>
+    </Box>
+  );
+}
+
+// ─── Empty-state placeholder for the summary column ──────────────────────────
+
+function EmptySlot({ icon, label }: { icon: React.ReactNode; label: string }) {
+  const theme = useTheme();
+  return (
+    <Box
+      sx={{
+        border: `1.5px dashed ${theme.palette.customColors.borderLight}`,
+        borderRadius: 2,
+        p: 2,
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 0.5,
+        color: 'text.disabled',
+      }}
+    >
+      <Box sx={{ '& svg': { fontSize: 22 } }}>{icon}</Box>
+      <Typography sx={{ fontSize: '0.8rem' }}>{label}</Typography>
+    </Box>
+  );
+}
+
 // ─── Page (container) ─────────────────────────────────────────────────────────
 
 export default function AssignAssetPage({ organizationName = 'Atlas Industries' }: AssignAssetPageProps) {
@@ -74,14 +141,49 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
   const handleEmployeeSelect = (employee: Employee) => dispatch(employeeSelected(employee.id));
   const handleConfirm = () => dispatch(confirmAssignment());
 
+  // ── Friendly, situation-aware copy ────────────────────────────────────────
+  const subtitle = useMemo(() => {
+    if (selectedAsset && selectedEmployee) return 'Everything looks good — set a date and confirm the handover below.';
+    if (selectedAsset && !selectedEmployee) return `${selectedAsset.name} selected — now choose who's receiving it.`;
+    if (!selectedAsset && selectedEmployee) return `${selectedEmployee.name} selected — now choose which asset to hand over.`;
+    return 'Hand over an asset to a team member with a signed acknowledgement.';
+  }, [selectedAsset, selectedEmployee]);
+
+  const confirmHint = !selectedAsset && !selectedEmployee
+    ? 'Pick an asset and an employee to continue.'
+    : !selectedAsset
+      ? 'Pick an asset to continue.'
+      : !selectedEmployee
+        ? 'Pick an employee to continue.'
+        : !handoverDate
+          ? 'Add a handover date to continue.'
+          : null;
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <Box>
+    <Box
+      sx={{
+        // Themed, thin scrollbars for this page and everything scrollable inside it
+        // (covers PickerPanel's internal lists too, since they render as descendants).
+        '& *': {
+          scrollbarWidth: 'thin',
+          scrollbarColor: `${alpha(theme.palette.text.primary, 0.18)} transparent`,
+        },
+        '& *::-webkit-scrollbar': { width: 8, height: 8 },
+        '& *::-webkit-scrollbar-track': { background: 'transparent' },
+        '& *::-webkit-scrollbar-thumb': {
+          background: alpha(theme.palette.text.primary, 0.18),
+          borderRadius: 8,
+          border: '2px solid transparent',
+          backgroundClip: 'padding-box',
+        },
+        '& *::-webkit-scrollbar-thumb:hover': {
+          background: alpha(theme.palette.primary.main, 0.45),
+        },
+      }}
+    >
       {/* Page header */}
-      <PageHeader
-        title="Assign asset"
-        subtitle="Hand over an asset to a team member with a signed acknowledgement."
-      />
+      <PageHeader title="Assign asset" subtitle={subtitle} />
 
       {/* 3-column layout */}
       <Box
@@ -173,11 +275,16 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
+            position: { lg: 'sticky' },
+            top: { lg: 88 },
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-            3. Confirm &amp; assign
-          </Typography>
+          <ColumnHeader
+            step={3}
+            done={Boolean(selectedAsset && selectedEmployee)}
+            icon={<AssignmentTurnedInOutlinedIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />}
+            label="Confirm & assign"
+          />
 
           {/* Asset summary */}
           {selectedAsset ? (
@@ -188,21 +295,18 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
               onClick={() => navigateToAsset(selectedAsset.id)}
             />
           ) : (
-            <Box
-              sx={{
-                border: `1.5px dashed ${theme.palette.customColors.borderLight}`,
-                borderRadius: 2,
-                p: 1.5,
-                textAlign: 'center',
-              }}
-            >
-              <Typography sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>No asset selected</Typography>
-            </Box>
+            <EmptySlot icon={<Inventory2OutlinedIcon />} label="No asset selected yet" />
           )}
 
           {/* Arrow */}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <ArrowForwardIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
+            <ArrowForwardIcon
+              sx={{
+                fontSize: 18,
+                color: selectedAsset && selectedEmployee ? theme.palette.primary.main : 'text.disabled',
+                transition: 'color 0.2s ease',
+              }}
+            />
           </Box>
 
           {/* Employee summary */}
@@ -213,16 +317,7 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
               secondary={`${selectedEmployee.department} · ${selectedEmployee.location}`}
             />
           ) : (
-            <Box
-              sx={{
-                border: `1.5px dashed ${theme.palette.customColors.borderLight}`,
-                borderRadius: 2,
-                p: 1.5,
-                textAlign: 'center',
-              }}
-            >
-              <Typography sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>No employee selected</Typography>
-            </Box>
+            <EmptySlot icon={<PersonOutlinedIcon />} label="No employee selected yet" />
           )}
 
           <Divider sx={{ borderColor: theme.palette.customColors.borderLight }} />
@@ -275,10 +370,18 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
             loading={isSubmitting}
             startIcon={<CheckIcon />}
             onClick={handleConfirm}
-            sx={{ mt: 0.5, py: 1.25 }}
+            sx={{ py: 1.25 }}
           >
             Confirm assignment
           </AppButton>
+
+          {/* Explain why the button is disabled, instead of leaving people guessing */}
+          {confirmHint && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, justifyContent: 'center', mt: -1 }}>
+              <InfoOutlinedIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+              <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>{confirmHint}</Typography>
+            </Box>
+          )}
         </Paper>
       </Box>
     </Box>

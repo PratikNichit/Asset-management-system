@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -16,6 +17,7 @@ import AddIcon from '@mui/icons-material/Add';
 import AppButton from './AppButton';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { toggleTheme, selectThemeMode } from '../redux/themeSlice';
+import { selectAuthUser } from '../redux/authSlice';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,15 @@ export default function AppTopBar({
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const themeMode = useAppSelector(selectThemeMode);
+  const authUser = useAppSelector(selectAuthUser);
   const border = `1px solid ${theme.palette.customColors.borderLight}`;
+
+  // Dynamic user initial from email (or name)
+  const userInitial = useMemo(() => {
+    const identifier = authUser?.email || authUser?.name || '';
+    const firstChar = identifier.trim().charAt(0);
+    return firstChar ? firstChar.toUpperCase() : 'U';
+  }, [authUser?.email, authUser?.name]);
 
   return (
     <Box
@@ -179,6 +189,7 @@ export default function AppTopBar({
         <IconButton
           size="small"
           aria-label="settings"
+          onClick={() => navigate('/settings')}
           sx={{ color: 'text.secondary', '&:hover': { bgcolor: theme.palette.customColors.bgNeutral } }}
         >
           <SettingsOutlinedIcon fontSize="small" />
@@ -186,19 +197,24 @@ export default function AppTopBar({
       </Box>
 
       {/* ── User avatar ────────────────────────────────────────────────────── */}
-      <Avatar
-        sx={{
-          width: 34,
-          height: 34,
-          bgcolor: theme.palette.primary.main,
-          fontSize: '0.8rem',
-          fontWeight: 700,
-          cursor: 'pointer',
-          flexShrink: 0,
-        }}
-      >
-        PS
-      </Avatar>
+      <Tooltip title={authUser?.email || authUser?.name || 'Account'}>
+        <Avatar
+          onClick={() => navigate('/settings')}
+          sx={{
+            width: 34,
+            height: 34,
+            bgcolor: theme.palette.primary.main,
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'opacity 0.2s ease',
+            '&:hover': { opacity: 0.9 },
+          }}
+        >
+          {userInitial}
+        </Avatar>
+      </Tooltip>
 
       {/* ── New asset CTA ──────────────────────────────────────────────────── */}
       <AppButton
