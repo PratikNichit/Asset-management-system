@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -21,6 +22,7 @@ import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import WorkOrderFormSection from '../components/schedule-work/WorkOrderFormSection';
 import ScheduleAssignmentSection from '../components/schedule-work/ScheduleAssignmentSection';
+import ReviewSection from '../components/schedule-work/ReviewSection';
 import ScheduleWorkSidebar from '../components/schedule-work/ScheduleWorkSidebar';
 
 export interface ScheduleWorkPageProps {
@@ -29,9 +31,12 @@ export interface ScheduleWorkPageProps {
   onCancel?: () => void;
 }
 
+const STEPS = ['Work order', 'Schedule & assignment', 'Review & confirm'];
+
 /**
  * ScheduleWorkPage container component.
- * Manages breadcrumb setup and Redux dispatchers, delegating UI rendering to sub-components.
+ * Manages breadcrumb setup, wizard step state, and Redux dispatchers,
+ * delegating UI rendering to sub-components.
  */
 export default function ScheduleWorkPage({
   organizationName = 'Atlas Industries',
@@ -52,6 +57,12 @@ export default function ScheduleWorkPage({
   const employees = useAppSelector(selectAllEmployeesList);
   const locations = useAppSelector(selectAllLocations);
 
+  const [activeStep, setActiveStep] = useState(0);
+  // Tracks whether "Next" was pressed on a step while it was invalid, so we
+  // only show red error states after the user has actually tried to move on
+  // (rather than on first render, which reads as broken/aggressive).
+  const [attemptedStep, setAttemptedStep] = useState<number | null>(null);
+
   useEffect(() => {
     setBreadcrumbLinks([
       { label: organizationName, path: '/dashboard' },
@@ -59,14 +70,16 @@ export default function ScheduleWorkPage({
       { label: 'Schedule work' },
     ]);
     dispatch(scheduleFormReset());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setActiveStep(0);
+    setAttemptedStep(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (form.isSuccess) {
       handleCancel();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.isSuccess]);
 
   const handleFieldChange =
@@ -77,6 +90,46 @@ export default function ScheduleWorkPage({
   const handleSubmit = () => {
     if (!canSubmit) return;
     dispatch(scheduleFormSubmitted());
+  };
+
+  // Per-step validity, independent of the redux-level `canSubmit` (which
+  // reflects the whole form). Used to gate "Next" and drive the sidebar's
+  // progress indicator.
+  const stepValid = useMemo(
+    () => [
+      Boolean(form.title?.trim()) && Boolean(form.assetId) && Boolean(form.type),
+      Boolean(form.scheduledDate),
+      canSubmit,
+    ],
+    [form.title, form.assetId, form.type, form.scheduledDate, canSubmit]
+  );
+
+  const isLastStep = activeStep === STEPS.length - 1;
+
+  const goToStep = (index: number) => {
+    const isReachable = index <= activeStep || stepValid.slice(0, index).every(Boolean);
+    if (!isReachable) return;
+    setActiveStep(index);
+    setAttemptedStep(null);
+  };
+
+  const handleNext = () => {
+    if (!stepValid[activeStep]) {
+      setAttemptedStep(activeStep);
+      return;
+    }
+    setAttemptedStep(null);
+    setActiveStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const handleBack = () => {
+    setAttemptedStep(null);
+    setActiveStep((s) => Math.max(s - 1, 0));
+  };
+
+  const handlePrimaryAction = () => {
+    if (isLastStep) handleSubmit();
+    else handleNext();
   };
 
   return (
@@ -103,7 +156,7 @@ export default function ScheduleWorkPage({
             variant="body2"
             sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.85rem' }}
           >
-            Create a work order and assign it to a technician or vendor.
+            Step {activeStep + 1} of {STEPS.length}: {STEPS[activeStep]}
           </Typography>
         </Box>
 
@@ -116,40 +169,70 @@ export default function ScheduleWorkPage({
           >
             Cancel
           </AppButton>
-          <AppButton
-            id="schedule-work-submit-btn"
-            variant="default"
-            startIcon={<BuildOutlinedIcon />}
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-          >
-            Schedule
-          </AppButton>
         </Box>
       </Box>
 
       {/* ── Main Layout ─────────────────────────────────────────────────── */}
       <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Box sx={{ flex: '1 1 480px', minWidth: 0 }}>
-          <WorkOrderFormSection
-            form={form}
-            assets={assets}
-            onFieldChange={handleFieldChange}
-          />
-          <ScheduleAssignmentSection
-            form={form}
-            employees={employees}
-            locations={locations}
-            onFieldChange={handleFieldChange}
-          />
+          {activeStep === 0 && (
+            <WorkOrderFormSection
+              form={form}
+              assets={assets}
+              onFieldChange={handleFieldChange}
+              showErrors={attemptedStep === 0}
+            />
+          )}
+
+          {activeStep === 1 && (
+            <ScheduleAssignmentSection
+              form={form}
+              employees={employees}
+              locations={locations}
+              onFieldChange={handleFieldChange}
+              showErrors={attemptedStep === 1}
+            />
+          )}
+
+          {activeStep === 2 && (
+            <ReviewSection
+              form={form}
+              assets={assets}
+              employees={employees}
+              locations={locations}
+              onFieldChange={handleFieldChange}
+            />
+          )}
+
+          {/* Step navigation */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+            <AppButton
+              id="schedule-work-back-btn"
+              variant="ghost"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBack}
+              disabled={activeStep === 0}
+            >
+              Back
+            </AppButton>
+            <AppButton
+              id="schedule-work-primary-btn"
+              variant="default"
+              endIcon={isLastStep ? undefined : <ArrowForwardIcon />}
+              startIcon={isLastStep ? <BuildOutlinedIcon /> : undefined}
+              onClick={handlePrimaryAction}
+              disabled={isLastStep && !canSubmit}
+            >
+              {isLastStep ? 'Schedule work' : 'Next'}
+            </AppButton>
+          </Box>
         </Box>
 
         <ScheduleWorkSidebar
-          form={form}
-          canSubmit={canSubmit}
-          onFieldChange={handleFieldChange}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          steps={STEPS}
+          activeStep={activeStep}
+          stepValid={stepValid}
+          onStepClick={goToStep}
         />
       </Box>
     </Box>

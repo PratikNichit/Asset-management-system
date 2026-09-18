@@ -145,8 +145,8 @@ export default function App() {
             <Route path="assets"                element={<AssetsPage isCreatingAssetDirectly={false} />} />
             <Route path="assets/new"            element={<NewAssetPage />} />
             <Route path="assign-asset"          element={<AssignAssetPage />} />
-            <Route path="maintenance"           element={<MaintenancePage onScheduleWork={() => {}} />} />
-            <Route path="maintenance/schedule"  element={<ScheduleWorkPage onCancel={() => {}} />} />
+            <Route path="maintenance"           element={<MaintenancePage />} />
+            <Route path="maintenance/schedule"  element={<ScheduleWorkPage />} />
             <Route path="employees"             element={<EmployeesPage />} />
             <Route path="employees/new"         element={<AddEmployeePage />} />
             <Route path="departments"           element={<DepartmentsPage />} />
