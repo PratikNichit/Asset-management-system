@@ -117,7 +117,7 @@ export const fetchCategories = createAsyncThunk('categories/fetchCategories', as
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.from('categories').select('*');
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map((row) => ({
           id: row.id,
           name: row.name,
@@ -132,6 +132,32 @@ export const fetchCategories = createAsyncThunk('categories/fetchCategories', as
       }
     }
     return INITIAL_CATEGORIES;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addCategoryAsync = createAsyncThunk('categories/addCategoryAsync', async (newCat: Omit<AssetCategoryItem, 'id'>, { getState, rejectWithValue }) => {
+  try {
+    const state = getState() as RootState;
+    const nextNum = state.categories.list.length + 1;
+    const id = `CAT-${String(nextNum).padStart(3, '0')}`;
+    const catToAdd = { id, ...newCat };
+
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('categories').insert([{
+        id: catToAdd.id,
+        name: catToAdd.name,
+        icon: catToAdd.iconType,
+        color: catToAdd.bgColor,
+        asset_count: catToAdd.assetsCount,
+        description: catToAdd.description,
+        depreciation_method: catToAdd.depreciationMethod,
+        useful_life_years: catToAdd.usefulLifeYears,
+      }]);
+      if (error) throw error;
+    }
+    return catToAdd;
   } catch (err) {
     return rejectWithValue((err as Error).message);
   }
@@ -227,6 +253,9 @@ const categoriesSlice = createSlice({
       })
       .addCase(deleteCategoryAsync.fulfilled, (state, action) => {
         state.list = state.list.filter((c) => c.id !== action.payload);
+      })
+      .addCase(addCategoryAsync.fulfilled, (state, action) => {
+        state.list.push(action.payload);
       });
   },
 });

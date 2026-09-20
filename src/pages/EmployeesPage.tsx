@@ -14,7 +14,7 @@ import {
   selectAllEmployeesList,
   selectSelectedEmployeeId,
   setSelectedEmployeeId,
-  addEmployee,
+  addEmployeeAsync,
   updateEmployee,
   deleteEmployeeAsync,
 } from '../redux/employeesSlice';
@@ -126,8 +126,12 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
     dispatch(setSelectedEmployeeId(null));
   };
 
-  const handleAddEmployee = (newEmp: Omit<Employee, 'id'>) => {
-    dispatch(addEmployee(newEmp));
+  const handleAddEmployee = async (newEmp: Omit<Employee, 'id'>) => {
+    try {
+      await dispatch(addEmployeeAsync(newEmp)).unwrap();
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to add employee', severity: 'error' });
+    }
   };
 
   const handleOpenEditModal = (emp: Employee) => {

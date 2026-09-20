@@ -59,7 +59,7 @@ export const fetchLocations = createAsyncThunk('locations/fetchLocations', async
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.from('locations').select('*');
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map((row) => ({
           id: row.id,
           name: row.name,
@@ -71,6 +71,30 @@ export const fetchLocations = createAsyncThunk('locations/fetchLocations', async
       }
     }
     return INITIAL_LOCATIONS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addLocationAsync = createAsyncThunk('locations/addLocationAsync', async (newLoc: Omit<LocationItem, 'id'>, { getState, rejectWithValue }) => {
+  try {
+    const state = getState() as RootState;
+    const nextNum = state.locations.list.length + 1;
+    const id = `LOC-${String(nextNum).padStart(3, '0')}`;
+    const locToAdd = { id, ...newLoc };
+
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('locations').insert([{
+        id: locToAdd.id,
+        name: locToAdd.name,
+        address: locToAdd.address,
+        type: locToAdd.type,
+        asset_count: locToAdd.assetsCount,
+        employee_count: locToAdd.employeesCount,
+      }]);
+      if (error) throw error;
+    }
+    return locToAdd;
   } catch (err) {
     return rejectWithValue((err as Error).message);
   }
@@ -162,6 +186,9 @@ const locationsSlice = createSlice({
       })
       .addCase(deleteLocationAsync.fulfilled, (state, action) => {
         state.list = state.list.filter((l) => l.id !== action.payload);
+      })
+      .addCase(addLocationAsync.fulfilled, (state, action) => {
+        state.list.push(action.payload);
       });
   },
 });

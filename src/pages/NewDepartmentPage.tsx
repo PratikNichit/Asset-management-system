@@ -10,7 +10,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { addDepartment, selectAllDepartments } from '../redux/departmentsSlice';
+import { addDepartmentAsync, selectAllDepartments } from '../redux/departmentsSlice';
 import { selectAllEmployeesList } from '../redux/employeesSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
@@ -44,7 +44,8 @@ export default function NewDepartmentPage({
   const [description, setDescription] = useState('');
 
   // UI Toast State
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' | 'warning' } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbLinks([
@@ -54,13 +55,14 @@ export default function NewDepartmentPage({
     ]);
   }, [organizationName, setBreadcrumbLinks]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!departmentName.trim()) {
-      setToastMessage('Please enter a department name.');
+      setToast({ message: 'Please enter a department name.', severity: 'warning' });
       return;
     }
 
+    setIsSubmitting(true);
     // Auto-generate 2-letter badge code from department name
     const generatedCode = departmentName.trim().substring(0, 2).toUpperCase();
 
@@ -76,12 +78,18 @@ export default function NewDepartmentPage({
       description: description.trim() || undefined,
     };
 
-    dispatch(addDepartment(newDept));
-
-    if (onSuccess) {
-      onSuccess();
-    } else if (onCancel) {
-      onCancel();
+    try {
+      await dispatch(addDepartmentAsync(newDept)).unwrap();
+      if (onSuccess) {
+        onSuccess();
+      } else if (onCancel) {
+        onCancel();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ message: `Failed to create department: ${msg}`, severity: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -151,6 +159,7 @@ export default function NewDepartmentPage({
             size="sm"
             startIcon={<ApartmentOutlinedIcon sx={{ fontSize: 19 }} />}
             onClick={() => handleSubmit()}
+            loading={isSubmitting}
             sx={{
               bgcolor: '#4F46E5',
               borderRadius: '10px',
@@ -461,13 +470,13 @@ export default function NewDepartmentPage({
 
       {/* Snackbar Notification Toast */}
       <Snackbar
-        open={Boolean(toastMessage)}
-        autoHideDuration={4000}
-        onClose={() => setToastMessage(null)}
+        open={Boolean(toast)}
+        autoHideDuration={5000}
+        onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setToastMessage(null)} severity="warning" sx={{ width: '100%' }}>
-          {toastMessage}
+        <Alert onClose={() => setToast(null)} severity={toast?.severity ?? 'warning'} sx={{ width: '100%' }}>
+          {toast?.message}
         </Alert>
       </Snackbar>
     </Box>

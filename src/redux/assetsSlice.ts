@@ -170,7 +170,7 @@ export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { re
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.from('assets').select('*');
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map((row) => ({
           id: row.id,
           name: row.name,

@@ -81,7 +81,7 @@ export const fetchDepartments = createAsyncThunk('departments/fetchDepartments',
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.from('departments').select('*');
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map((row) => ({
           id: row.id,
           name: row.name,
@@ -94,6 +94,38 @@ export const fetchDepartments = createAsyncThunk('departments/fetchDepartments',
       }
     }
     return INITIAL_DEPARTMENTS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addDepartmentAsync = createAsyncThunk('departments/addDepartmentAsync', async (newDept: Omit<Department, 'id'>, { getState, rejectWithValue }) => {
+  try {
+    const state = getState() as RootState;
+    const nextNum = state.departments.list.length + 1;
+    const id = `DEP-${String(nextNum).padStart(3, '0')}`;
+    
+    const badges = [
+      'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+      'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)',
+      'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
+    ];
+    const badgeBg = newDept.badgeBg || badges[Math.floor(Math.random() * badges.length)];
+    const deptToAdd = { id, badgeBg, ...newDept };
+
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('departments').insert([{
+        id: deptToAdd.id,
+        name: deptToAdd.name,
+        code: deptToAdd.code,
+        head: deptToAdd.head,
+        headcount: deptToAdd.membersCount,
+        asset_count: deptToAdd.assetsCount,
+        badge_bg: deptToAdd.badgeBg,
+      }]);
+      if (error) throw error;
+    }
+    return deptToAdd;
   } catch (err) {
     return rejectWithValue((err as Error).message);
   }
@@ -193,6 +225,9 @@ const departmentsSlice = createSlice({
       })
       .addCase(deleteDepartmentAsync.fulfilled, (state, action) => {
         state.list = state.list.filter((d) => d.id !== action.payload);
+      })
+      .addCase(addDepartmentAsync.fulfilled, (state, action) => {
+        state.list.push(action.payload);
       });
   },
 });

@@ -6,7 +6,7 @@ import Alert from '@mui/material/Alert';
 import AddIcon from '@mui/icons-material/Add';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { selectAllLocations, addLocation, updateLocationAsync, deleteLocationAsync } from '../redux/locationsSlice';
+import { selectAllLocations, addLocationAsync, updateLocationAsync, deleteLocationAsync } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import LocationCard from '../components/LocationCard';
@@ -33,8 +33,17 @@ export default function LocationsPage({ organizationName = 'Atlas' }: LocationsP
     { open: false, message: '', severity: 'success' }
   );
 
-  const handleAddLocation = (newLoc: Omit<LocationItem, 'id'>) => {
-    dispatch(addLocation(newLoc));
+  const handleAddLocation = async (newLoc: Omit<LocationItem, 'id'>) => {
+    setIsSaving(true);
+    try {
+      await dispatch(addLocationAsync(newLoc)).unwrap();
+      setSnackbar({ open: true, message: 'Location added successfully', severity: 'success' });
+      setIsAddModalOpen(false);
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to add location', severity: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditLocation = (loc: LocationItem) => setEditingLocation(loc);
@@ -187,6 +196,7 @@ export default function LocationsPage({ organizationName = 'Atlas' }: LocationsP
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddLocation}
+        isSaving={isSaving}
       />
     </Box>
   );

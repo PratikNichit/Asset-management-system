@@ -111,7 +111,7 @@ export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.from('employees').select('*');
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map((row) => ({
           id: row.id,
           name: row.name,
@@ -129,6 +129,75 @@ export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async
     return rejectWithValue((err as Error).message);
   }
 });
+
+export const getNextEmployeeId = (employees: Employee[]): string => {
+  if (!employees || employees.length === 0) {
+    return 'EMP-001';
+  }
+
+  let maxNum = 0;
+  for (const emp of employees) {
+    if (!emp || !emp.id) continue;
+    const match = emp.id.match(/\d+/g);
+    if (match) {
+      const num = parseInt(match[match.length - 1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  const nextNum = maxNum > 0 ? maxNum + 1 : employees.length + 1;
+  return `EMP-${String(nextNum).padStart(3, '0')}`;
+};
+
+export const addEmployeeAsync = createAsyncThunk(
+  'employees/addEmployeeAsync',
+  async (newEmp: (Omit<Employee, 'id'> & { id?: string }), { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      let allEmployees = [...state.employees.list];
+
+      if (isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.from('employees').select('id');
+          if (data && data.length > 0) {
+            allEmployees = [
+              ...allEmployees,
+              ...data.map((r) => ({ id: r.id } as Employee)),
+            ];
+          }
+        } catch {
+          // Ignore and proceed with local list if Supabase query fails
+        }
+      }
+
+      const generatedId = getNextEmployeeId(allEmployees);
+      const id = newEmp.id || generatedId;
+
+      const avatarBgs = ['#2563EB', '#0284C7', '#EA580C', '#65A30D', '#0D9488', '#9333EA'];
+      const avatarBg = newEmp.avatarBg || avatarBgs[Math.floor(Math.random() * avatarBgs.length)];
+      const empToAdd: Employee = { ...newEmp, id, avatarBg };
+
+      if (isSupabaseConfigured()) {
+        const { error } = await supabase.from('employees').insert([{
+          id: empToAdd.id,
+          name: empToAdd.name,
+          role: empToAdd.role,
+          department: empToAdd.department,
+          location: empToAdd.location,
+          email: empToAdd.email,
+          joined_date: empToAdd.joinedDate,
+          avatar_bg: empToAdd.avatarBg,
+        }]);
+        if (error) throw error;
+      }
+      return empToAdd;
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  }
+);
 
 export const deleteEmployeeAsync = createAsyncThunk('employees/deleteEmployeeAsync', async (employeeId: string, { rejectWithValue }) => {
   try {
@@ -169,12 +238,11 @@ const employeesSlice = createSlice({
     setEmployees(state, action: PayloadAction<Employee[]>) {
       state.list = action.payload;
     },
-    addEmployee(state, action: PayloadAction<Omit<Employee, 'id'>>) {
-      const nextNum = state.list.length + 1;
-      const id = `EMP-${String(nextNum).padStart(3, '0')}`;
+    addEmployee(state, action: PayloadAction<Omit<Employee, 'id'> & { id?: string }>) {
+      const id = action.payload.id || getNextEmployeeId(state.list);
       const avatarBgs = ['#2563EB', '#0284C7', '#EA580C', '#65A30D', '#0D9488', '#9333EA'];
-      const avatarBg = avatarBgs[Math.floor(Math.random() * avatarBgs.length)];
-      const newEmp = { id, avatarBg, ...action.payload };
+      const avatarBg = action.payload.avatarBg || avatarBgs[Math.floor(Math.random() * avatarBgs.length)];
+      const newEmp = { ...action.payload, id, avatarBg };
       state.list.unshift(newEmp);
 
       if (isSupabaseConfigured()) {
@@ -232,6 +300,9 @@ const employeesSlice = createSlice({
       .addCase(updateEmployeeAsync.fulfilled, (state, action) => {
         const index = state.list.findIndex((e) => e.id === action.payload.id);
         if (index !== -1) state.list[index] = action.payload;
+      })
+      .addCase(addEmployeeAsync.fulfilled, (state, action) => {
+        state.list.unshift(action.payload);
       });
   },
 });

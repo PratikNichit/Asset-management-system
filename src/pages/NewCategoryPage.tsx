@@ -10,7 +10,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 
 import { useAppDispatch } from '../app/hooks';
-import { addCategory } from '../redux/categoriesSlice';
+import { addCategoryAsync } from '../redux/categoriesSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { AssetCategoryItem, CategoryIconType } from '../types/category';
@@ -59,6 +59,7 @@ export default function NewCategoryPage({
 
   // UI state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbLinks([
@@ -68,13 +69,14 @@ export default function NewCategoryPage({
     ]);
   }, [organizationName, setBreadcrumbLinks]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!categoryName.trim()) {
       setToastMessage('Please enter a category name.');
       return;
     }
 
+    setIsSubmitting(true);
     const selectedSwatch = COLOR_SWATCHES[selectedColorIndex];
 
     const newCat: Omit<AssetCategoryItem, 'id'> = {
@@ -91,13 +93,19 @@ export default function NewCategoryPage({
       requiresCalibration: requiresCalibration === 'Yes',
     };
 
-    dispatch(addCategory(newCat));
-    setToastMessage(`Category "${categoryName.trim()}" created successfully.`);
+    try {
+      await dispatch(addCategoryAsync(newCat)).unwrap();
+      setToastMessage(`Category "${categoryName.trim()}" created successfully.`);
 
-    if (onSuccess) {
-      onSuccess();
-    } else if (onCancel) {
-      onCancel();
+      if (onSuccess) {
+        onSuccess();
+      } else if (onCancel) {
+        onCancel();
+      }
+    } catch (err) {
+      setToastMessage('Failed to create category. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -142,6 +150,7 @@ export default function NewCategoryPage({
             size="sm"
             startIcon={<CategoryOutlinedIcon />}
             onClick={() => handleSubmit()}
+            loading={isSubmitting}
           >
             Create category
           </AppButton>
