@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import { alpha, useTheme } from '@mui/material/styles';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
@@ -12,6 +14,9 @@ import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurned
 import CheckIcon from '@mui/icons-material/Check';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+
+import { useNavigate } from 'react-router-dom';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
@@ -30,6 +35,7 @@ import {
   selectNotes,
   selectIsSubmitting,
   selectCanConfirm,
+  selectAssignError,
 } from '../redux/assignAssetSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
@@ -116,6 +122,11 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
   const { setBreadcrumbLinks, navigateToAsset } = useLayout();
   const theme = useTheme();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  // Track previous submitting state to detect transition from submitting → done.
+  const wasSubmitting = useRef(false);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   // ── Selectors ───────────────────────────────────────────────────────────────
   const assets = useAppSelector(selectAllAssets);
@@ -128,6 +139,17 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
   const notes = useAppSelector(selectNotes);
   const isSubmitting = useAppSelector(selectIsSubmitting);
   const canConfirm = useAppSelector(selectCanConfirm);
+  const assignError = useAppSelector(selectAssignError);
+
+  // Navigate to /assets after a successful assignment.
+  useEffect(() => {
+    if (wasSubmitting.current && !isSubmitting && !assignError) {
+      setSuccessOpen(true);
+      const timer = setTimeout(() => navigate('/assets', { replace: true }), 1500);
+      return () => clearTimeout(timer);
+    }
+    wasSubmitting.current = isSubmitting;
+  }, [isSubmitting, assignError, navigate]);
 
   useEffect(() => {
     setBreadcrumbLinks([
@@ -139,7 +161,10 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleAssetSelect = (asset: Asset) => dispatch(assetSelected(asset.id));
   const handleEmployeeSelect = (employee: Employee) => dispatch(employeeSelected(employee.id));
-  const handleConfirm = () => dispatch(confirmAssignment());
+  const handleConfirm = () => {
+    wasSubmitting.current = true;
+    dispatch(confirmAssignment());
+  };
 
   // ── Friendly, situation-aware copy ────────────────────────────────────────
   const subtitle = useMemo(() => {
@@ -158,6 +183,10 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
         : !handoverDate
           ? 'Add a handover date to continue.'
           : null;
+
+  // ── Already-assigned detection ────────────────────────────────────────────
+  const isAlreadyAssigned = Boolean(selectedAsset?.assignedTo);
+  const currentAssignee = selectedAsset?.assignedTo ?? null;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -298,6 +327,34 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
             <EmptySlot icon={<Inventory2OutlinedIcon />} label="No asset selected yet" />
           )}
 
+          {/* ── Already-assigned warning ──────────────────────────────────── */}
+          {isAlreadyAssigned && currentAssignee && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1,
+                p: 1.5,
+                borderRadius: 2,
+                bgcolor: 'warning.main',
+                background: (t) => `linear-gradient(135deg, ${alpha(t.palette.warning.main, 0.12)} 0%, ${alpha(t.palette.warning.light, 0.08)} 100%)`,
+                border: (t) => `1.5px solid ${alpha(t.palette.warning.main, 0.35)}`,
+              }}
+            >
+              <WarningAmberRoundedIcon
+                sx={{ fontSize: 18, color: 'warning.dark', mt: 0.1, flexShrink: 0 }}
+              />
+              <Box>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'warning.dark', lineHeight: 1.3 }}>
+                  Already assigned
+                </Typography>
+                <Typography sx={{ fontSize: '0.75rem', color: 'warning.dark', opacity: 0.85, mt: 0.3, lineHeight: 1.4 }}>
+                  This asset is currently with <strong>{currentAssignee}</strong>. Confirming will revoke access from them and hand it to the new employee.
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
           {/* Arrow */}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <ArrowForwardIcon
@@ -361,7 +418,7 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
             />
           </Box>
 
-          {/* Confirm button */}
+          {/* Confirm / Reassign button */}
           <AppButton
             id="assign-confirm-btn"
             variant="default"
@@ -370,9 +427,16 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
             loading={isSubmitting}
             startIcon={<CheckIcon />}
             onClick={handleConfirm}
-            sx={{ py: 1.25 }}
+            sx={{
+              py: 1.25,
+              ...(isAlreadyAssigned && canConfirm && {
+                bgcolor: 'warning.main',
+                '&:hover': { bgcolor: 'warning.dark' },
+                boxShadow: '0 2px 8px rgba(234,179,8,0.3)',
+              }),
+            }}
           >
-            Confirm assignment
+            {isAlreadyAssigned ? 'Reassign asset' : 'Confirm assignment'}
           </AppButton>
 
           {/* Explain why the button is disabled, instead of leaving people guessing */}
@@ -382,8 +446,27 @@ export default function AssignAssetPage({ organizationName = 'Atlas Industries' 
               <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>{confirmHint}</Typography>
             </Box>
           )}
+
+          {/* Error message */}
+          {assignError && (
+            <MuiAlert severity="error" sx={{ fontSize: '0.8rem', py: 0.5 }}>
+              {assignError}
+            </MuiAlert>
+          )}
         </Paper>
       </Box>
+
+      {/* Success snackbar */}
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={1500}
+        onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MuiAlert onClose={() => setSuccessOpen(false)} severity="success" sx={{ width: '100%' }}>
+          Asset assigned successfully!
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 }

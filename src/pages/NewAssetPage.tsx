@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -13,11 +13,13 @@ import CheckIcon from '@mui/icons-material/Check';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-import { useAppSelector } from '../app/hooks';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { selectAllCategories } from '../redux/categoriesSlice';
 import { selectAllDepartments } from '../redux/departmentsSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
 import { selectAllEmployeesList } from '../redux/employeesSlice';
+import { addAssetAsync } from '../redux/assetsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { Asset } from '../types/asset';
@@ -93,6 +95,8 @@ export default function NewAssetPage({
   onSuccess,
 }: NewAssetPageProps) {
   const { setBreadcrumbLinks } = useLayout();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const reduxCategories = useAppSelector(selectAllCategories);
   const reduxDepartments = useAppSelector(selectAllDepartments);
@@ -103,7 +107,25 @@ export default function NewAssetPage({
   const departmentsList = reduxDepartments.length > 0 ? reduxDepartments.map((d) => d.name) : ['Engineering', 'Design', 'Operations', 'Production', 'Quality', 'Maintenance', 'Admin', 'Finance'];
   const locationsList = reduxLocations.length > 0 ? reduxLocations.map((l) => l.name) : ['HQ — Bengaluru', 'Plant 1 — Pune', 'Warehouse A', 'R&D Lab'];
 
-  const form = useNewAssetForm(onSuccess, onCancel);
+  // Dispatch the new asset to Redux (and Supabase if configured), then navigate away.
+  const handleSuccess = useCallback(
+    async (newAsset: Asset) => {
+      await dispatch(addAssetAsync(newAsset));
+      if (onSuccess) {
+        onSuccess(newAsset);
+      } else {
+        navigate('/assets', { replace: true });
+      }
+    },
+    [dispatch, navigate, onSuccess],
+  );
+
+  const handleCancelOrBack = useCallback(() => {
+    if (onCancel) onCancel();
+    else navigate('/assets', { replace: true });
+  }, [onCancel, navigate]);
+
+  const form = useNewAssetForm(handleSuccess, handleCancelOrBack);
 
   useEffect(() => {
     setBreadcrumbLinks([
