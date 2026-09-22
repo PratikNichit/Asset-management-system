@@ -157,7 +157,7 @@ export default function MaintenancePage({
       key: 'type',
       header: 'TYPE',
       render: (wo) => {
-        const typeCfg = TYPE_CONFIG[wo.type];
+        const typeCfg = TYPE_CONFIG[wo.type] ?? { color: theme.palette.text.secondary };
         return (
           <Typography sx={{ fontSize: '0.83rem', color: typeCfg.color, fontWeight: 500 }}>
             {wo.type}
@@ -203,7 +203,7 @@ export default function MaintenancePage({
       header: 'COST',
       render: (wo) => (
         <Typography sx={{ fontSize: '0.83rem', fontWeight: 600 }}>
-          ${wo.costUsd.toLocaleString()}
+          ₹{wo.costUsd.toLocaleString()}
         </Typography>
       ),
     },
@@ -211,7 +211,11 @@ export default function MaintenancePage({
       key: 'status',
       header: 'STATUS',
       render: (wo) => {
-        const statusCfg = STATUS_CONFIG[wo.status];
+        const statusCfg = STATUS_CONFIG[wo.status] ?? {
+          dotColor: theme.palette.text.secondary,
+          bg: theme.palette.action.hover,
+          label: wo.status,
+        };
         return (
           <Chip
             size="small"

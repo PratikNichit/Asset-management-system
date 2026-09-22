@@ -99,11 +99,11 @@ export default function DepartmentsPage({ organizationName = 'Atlas' }: Departme
         <Box>
           <Typography
             variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem', color: '#0F172A' }}
+            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem', color: 'text.primary' }}
           >
             Departments
           </Typography>
-          <Typography variant="body2" sx={{ mt: 0.5, fontSize: '0.9rem', color: '#64748B' }}>
+          <Typography variant="body2" sx={{ mt: 0.5, fontSize: '0.9rem', color: 'text.secondary' }}>
             Organize people and assets by team.
           </Typography>
         </Box>

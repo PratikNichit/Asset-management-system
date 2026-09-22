@@ -79,7 +79,7 @@ const initialState: DepartmentsState = {
 export const fetchDepartments = createAsyncThunk('departments/fetchDepartments', async (_, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from('departments').select('*');
+      const { data, error } = await supabase.from('v_departments').select('*');
       if (error) throw error;
       if (data) {
         return data.map((row) => ({
@@ -87,6 +87,8 @@ export const fetchDepartments = createAsyncThunk('departments/fetchDepartments',
           name: row.name,
           code: row.code,
           head: row.head,
+          headId: row.head_id,
+          locationId: row.location_id,
           membersCount: row.headcount ?? 0,
           assetsCount: row.asset_count ?? 0,
           badgeBg: row.badge_bg,
@@ -118,9 +120,8 @@ export const addDepartmentAsync = createAsyncThunk('departments/addDepartmentAsy
         id: deptToAdd.id,
         name: deptToAdd.name,
         code: deptToAdd.code,
-        head: deptToAdd.head,
-        headcount: deptToAdd.membersCount,
-        asset_count: deptToAdd.assetsCount,
+        head_id: deptToAdd.headId,
+        location_id: deptToAdd.locationId,
         badge_bg: deptToAdd.badgeBg,
       }]);
       if (error) throw error;
@@ -134,14 +135,15 @@ export const addDepartmentAsync = createAsyncThunk('departments/addDepartmentAsy
 export const updateDepartmentAsync = createAsyncThunk('departments/updateDepartmentAsync', async (dept: Department, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('departments').update({
+      const updatePayload: Record<string, any> = {
         name: dept.name,
         code: dept.code,
-        head: dept.head,
-        headcount: dept.membersCount,
-        asset_count: dept.assetsCount,
         badge_bg: dept.badgeBg,
-      }).eq('id', dept.id);
+      };
+      if (dept.headId) updatePayload.head_id = dept.headId;
+      if (dept.locationId) updatePayload.location_id = dept.locationId;
+      
+      const { error } = await supabase.from('departments').update(updatePayload).eq('id', dept.id);
       if (error) throw error;
     }
     return dept;

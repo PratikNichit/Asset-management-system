@@ -12,33 +12,16 @@ import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { addEmployeeAsync, selectAllEmployeesList, getNextEmployeeId, fetchEmployees } from '../redux/employeesSlice';
+import { selectAllDepartments } from '../redux/departmentsSlice';
+import { selectAllLocations } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
-import type { Employee } from '../types/employee';
 
 export interface AddEmployeePageProps {
   organizationName?: string;
   onCancel?: () => void;
   onSuccess?: () => void;
 }
-
-const DEPARTMENTS = [
-  'Engineering',
-  'Design',
-  'Operations',
-  'Production',
-  'Quality',
-  'Maintenance',
-  'Finance',
-  'Admin',
-];
-
-const LOCATIONS = [
-  'HQ — Bengaluru',
-  'Plant 1 — Pune',
-  'Warehouse A',
-  'Branch Office — Mumbai',
-];
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contractor', 'Intern'];
 
@@ -52,6 +35,8 @@ export default function AddEmployeePage({
   const { setBreadcrumbLinks } = useLayout();
   const dispatch = useAppDispatch();
   const employees = useAppSelector(selectAllEmployeesList);
+  const reduxDepartments = useAppSelector(selectAllDepartments);
+  const reduxLocations = useAppSelector(selectAllLocations);
 
   useEffect(() => {
     dispatch(fetchEmployees());
@@ -98,8 +83,10 @@ export default function AddEmployeePage({
       name: fullName.trim(),
       role: jobTitle.trim(),
       email: workEmail.trim(),
-      department: department || 'Engineering',
-      location: location || 'HQ — Bengaluru',
+      department: reduxDepartments.find(d => d.id === department)?.name || 'Engineering',
+      departmentId: department || undefined,
+      location: reduxLocations.find(l => l.id === location)?.name || 'HQ — Bengaluru',
+      locationId: location || undefined,
       joinedDate: startDate || new Date().toISOString().slice(0, 10),
       phone: phone.trim() || undefined,
       employmentType,
@@ -375,9 +362,9 @@ export default function AddEmployeePage({
                   <MenuItem value="" disabled sx={{ color: 'text.disabled', fontSize: '0.88rem' }}>
                     Select department
                   </MenuItem>
-                  {DEPARTMENTS.map((dept) => (
-                    <MenuItem key={dept} value={dept} sx={{ fontSize: '0.88rem' }}>
-                      {dept}
+                  {reduxDepartments.map((dept) => (
+                    <MenuItem key={dept.id} value={dept.id} sx={{ fontSize: '0.88rem' }}>
+                      {dept.name}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -402,9 +389,9 @@ export default function AddEmployeePage({
                   <MenuItem value="" disabled sx={{ color: 'text.disabled', fontSize: '0.88rem' }}>
                     Select location
                   </MenuItem>
-                  {LOCATIONS.map((loc) => (
-                    <MenuItem key={loc} value={loc} sx={{ fontSize: '0.88rem' }}>
-                      {loc}
+                  {reduxLocations.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id} sx={{ fontSize: '0.88rem' }}>
+                      {loc.name}
                     </MenuItem>
                   ))}
                 </TextField>

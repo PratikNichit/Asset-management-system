@@ -43,6 +43,19 @@ export interface WorkOrder {
   status: WorkOrderStatus;
 }
 
+const WORK_ORDER_TYPE_ALIASES: Record<string, WorkOrderType> = {
+  Repair: 'Repair',
+  'Corrective Repair': 'Repair',
+  Preventive: 'Preventive',
+  'Preventive Maintenance': 'Preventive',
+  Calibration: 'Calibration',
+  Inspection: 'Inspection',
+};
+
+function normalizeWorkOrderType(value: unknown): WorkOrderType {
+  return WORK_ORDER_TYPE_ALIASES[String(value)] ?? 'Inspection';
+}
+
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 export const MOCK_WORK_ORDERS: WorkOrder[] = [
@@ -171,14 +184,14 @@ const initialState: MaintenanceState = {
 export const fetchWorkOrders = createAsyncThunk('maintenance/fetchWorkOrders', async (_, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from('work_orders').select('*');
+      const { data, error } = await supabase.from('v_work_orders').select('*');
       if (error) throw error;
       if (data && data.length > 0) {
         return data.map((row) => ({
           id: row.id,
           assetName: row.asset_name,
           assetCode: row.asset_code,
-          type: row.type as WorkOrderType,
+          type: normalizeWorkOrderType(row.type),
           date: row.date,
           technicianId: row.technician_id,
           technicianName: row.technician_name,
@@ -270,16 +283,13 @@ const maintenanceSlice = createSlice({
       if (isSupabaseConfigured()) {
         supabase.from('work_orders').insert([{
           id: newOrder.id,
-          asset_name: newOrder.assetName,
-          asset_code: newOrder.assetCode,
+          asset_id: form.assetId,
           type: newOrder.type,
           date: newOrder.date,
-          technician_id: newOrder.technicianId,
-          technician_name: newOrder.technicianName,
-          technician_avatar: newOrder.technicianAvatar,
-          technician_avatar_color: newOrder.technicianAvatarColor,
+          technician_id: form.technicianId,
           cost_usd: newOrder.costUsd,
           status: newOrder.status,
+          notes: form.description,
         }]).then();
       }
     },

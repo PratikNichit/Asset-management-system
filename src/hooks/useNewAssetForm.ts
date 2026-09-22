@@ -1,5 +1,11 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Asset, AssetStatus } from '../types/asset';
+import { useAppSelector } from '../app/hooks';
+import { selectAllCategories } from '../redux/categoriesSlice';
+import { selectAllDepartments } from '../redux/departmentsSlice';
+import { selectAllLocations } from '../redux/locationsSlice';
+import { selectAllEmployeesList } from '../redux/employeesSlice';
+import { selectAllAssets, getNextAssetId } from '../redux/assetsSlice';
 
 export const STEPS = [
   { label: 'Basic details', helper: 'Name & identifiers' },
@@ -9,7 +15,13 @@ export const STEPS = [
   { label: 'Review', helper: 'Confirm & create' },
 ];
 
-export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?: () => void) {
+export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void | Promise<void>, onCancel?: () => void) {
+  const reduxCategories = useAppSelector(selectAllCategories);
+  const reduxDepartments = useAppSelector(selectAllDepartments);
+  const reduxLocations = useAppSelector(selectAllLocations);
+  const reduxEmployees = useAppSelector(selectAllEmployeesList);
+  const reduxAssets = useAppSelector(selectAllAssets);
+
   // Step control
   const [activeStep, setActiveStep] = useState(0);
   const [furthestStep, setFurthestStep] = useState(0);
@@ -17,7 +29,9 @@ export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?
 
   // Form State — Basic
   const [assetName, setAssetName] = useState('');
-  const [assetId] = useState('AST-01301');
+  
+  const assetId = useMemo(() => getNextAssetId(reduxAssets), [reduxAssets]);
+  
   const [serialNumber, setSerialNumber] = useState('');
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
@@ -57,8 +71,10 @@ export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?
     if (purchaseDate && warrantyUntil && warrantyUntil < purchaseDate) {
       errors[1].warrantyUntil = 'Warranty date is before the purchase date.';
     }
+    if (!department) errors[2].department = 'Select a department.';
+    if (!location) errors[2].location = 'Select a location.';
     return errors;
-  }, [assetName, category, purchaseCost, purchaseDate, warrantyUntil]);
+  }, [assetName, category, purchaseCost, purchaseDate, warrantyUntil, department, location]);
 
   const stepIsValid = (step: number) => Object.keys(stepErrors[step] ?? {}).length === 0;
   const showError = (step: number, field: string) => touched[field] && stepErrors[step]?.[field];
@@ -70,6 +86,7 @@ export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?
   const handleNext = () => {
     if (activeStep === 0) setTouched((t) => ({ ...t, assetName: true, category: true }));
     if (activeStep === 1) setTouched((t) => ({ ...t, purchaseCost: true, warrantyUntil: true }));
+    if (activeStep === 2) setTouched((t) => ({ ...t, department: true, location: true }));
     if (!stepIsValid(activeStep)) return;
     const next = Math.min(activeStep + 1, STEPS.length - 1);
     setActiveStep(next);
@@ -104,15 +121,25 @@ export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?
     setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const buildAsset = (): Asset => ({
-    id: assetId,
-    code: assetId,
-    name: assetName.trim() || 'Untitled Asset',
-    category: category || 'General',
-    serial: serialNumber.trim() || 'N/A',
-    department: department || 'Unassigned',
-    location: location || 'HQ — Bengaluru',
-    assignedTo: assignedEmployee !== 'Unassigned' ? assignedEmployee : null,
+  const buildAsset = (): Asset => {
+    const catName = reduxCategories.find(c => c.id === category)?.name || 'General';
+    const deptName = reduxDepartments.find(d => d.id === department)?.name || 'Unassigned';
+    const locName = reduxLocations.find(l => l.id === location)?.name || 'HQ — Bengaluru';
+    const empName = reduxEmployees.find(e => e.id === assignedEmployee)?.name || null;
+
+    return {
+      id: assetId,
+      code: assetId,
+      name: assetName.trim() || 'Untitled Asset',
+      category: catName,
+      categoryId: category || undefined,
+      serial: serialNumber.trim() || 'N/A',
+      department: deptName,
+      departmentId: department || undefined,
+      location: locName,
+      locationId: location || undefined,
+      assignedTo: empName,
+      assignedToId: assignedEmployee !== 'Unassigned' ? assignedEmployee : null,
     warrantyExpiry: warrantyUntil || null,
     status,
     brand: brand.trim() || undefined,
@@ -123,18 +150,25 @@ export function useNewAssetForm(onSuccess?: (newAsset: Asset) => void, onCancel?
     description: description.trim() || undefined,
     images,
     documents,
-  });
+    };
+  };
 
-  const handleCreate = () => {
-    setTouched((t) => ({ ...t, assetName: true, category: true }));
-    if (!stepIsValid(0)) {
-      setActiveStep(0);
+  const handleCreate = async () => {
+    setTouched((t) => ({ ...t, assetName: true, category: true, department: true, location: true }));
+    const firstInvalidStep = [0, 1, 2].find((step) => !stepIsValid(step));
+    if (firstInvalidStep !== undefined) {
+      setActiveStep(firstInvalidStep);
       setToastMessage('Please complete the required fields before creating this asset.');
       return;
     }
+
     const createdAsset = buildAsset();
-    if (onSuccess) onSuccess(createdAsset);
-    else if (onCancel) onCancel();
+    try {
+      if (onSuccess) await onSuccess(createdAsset);
+      else if (onCancel) onCancel();
+    } catch (error) {
+      setToastMessage(error instanceof Error ? error.message : 'Failed to create asset.');
+    }
   };
 
   const handleSaveDraft = () => {

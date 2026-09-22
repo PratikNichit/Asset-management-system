@@ -53,7 +53,9 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
       onClose={isSaving ? undefined : onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}
+      slotProps={{
+        paper: { sx: { borderRadius: 3, p: 0.5 } },
+      }}
     >
       <DialogTitle sx={{ pt: 2.5, px: 3, pb: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -84,7 +86,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
       <DialogContent sx={{ px: 3, pt: 2.5, pb: 1 }}>
         <Grid container spacing={2}>
           {/* Row 1 */}
-          <Grid item xs={12} sm={8}>
+          <Grid size={{ xs: 12, sm: 8 }}>
             <TextField
               label="Asset Name"
               value={form.name}
@@ -94,7 +96,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Status"
               select
@@ -111,7 +113,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
           </Grid>
 
           {/* Row 2 */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Serial / Barcode"
               value={form.serial}
@@ -121,7 +123,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Brand"
               value={form.brand ?? ''}
@@ -131,7 +133,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Model"
               value={form.model ?? ''}
@@ -143,7 +145,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
           </Grid>
 
           {/* Row 3 */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Category"
               value={form.category}
@@ -153,7 +155,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Department"
               value={form.department}
@@ -163,7 +165,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Location"
               value={form.location}
@@ -175,7 +177,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
           </Grid>
 
           {/* Row 4 */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Assigned To"
               value={form.assignedTo ?? ''}
@@ -185,7 +187,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Warranty Expiry"
               type="date"
@@ -193,11 +195,11 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               onChange={handleChange('warrantyExpiry')}
               fullWidth
               size="small"
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Purchase Date"
               type="date"
@@ -205,13 +207,13 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               onChange={handleChange('purchaseDate')}
               fullWidth
               size="small"
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               sx={inputSx}
             />
           </Grid>
 
           {/* Row 5 */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               label="Purchase Cost ($)"
               type="number"
@@ -222,7 +224,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
               sx={inputSx}
             />
           </Grid>
-          <Grid item xs={12} sm={8}>
+          <Grid size={{ xs: 12, sm: 8 }}>
             <TextField
               label="Vendor"
               value={form.vendor ?? ''}
@@ -234,7 +236,7 @@ export default function EditAssetModal({ open, asset, onClose, onSave, isSaving 
           </Grid>
 
           {/* Description */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Description"
               value={form.description ?? ''}

@@ -8,7 +8,7 @@ interface Props {
   state: any;
   setters: any;
   handlers: any;
-  categoriesList: string[];
+  categoriesList: { id: string; name: string }[];
 }
 
 export default function BasicDetailsStep({ state, setters, handlers, categoriesList }: Props) {
@@ -87,8 +87,11 @@ export default function BasicDetailsStep({ state, setters, handlers, categoriesL
             slotProps={{
               select: {
                 displayEmpty: true,
-                renderValue: (selected: unknown) =>
-                  !selected || selected === '' ? <span style={{ color: '#94A3B8' }}>Select category</span> : String(selected),
+                renderValue: (selected: unknown) => {
+                  if (!selected || selected === '') return <span style={{ color: '#94A3B8' }}>Select category</span>;
+                  const found = categoriesList.find(c => c.id === selected);
+                  return found ? found.name : String(selected);
+                }
               },
             }}
             sx={fieldSx}
@@ -97,8 +100,8 @@ export default function BasicDetailsStep({ state, setters, handlers, categoriesL
               Select category
             </MenuItem>
             {categoriesList.map((cat) => (
-              <MenuItem key={cat} value={cat} sx={{ fontSize: '0.9rem' }}>
-                {cat}
+              <MenuItem key={cat.id} value={cat.id} sx={{ fontSize: '0.9rem' }}>
+                {cat.name}
               </MenuItem>
             ))}
           </TextField>

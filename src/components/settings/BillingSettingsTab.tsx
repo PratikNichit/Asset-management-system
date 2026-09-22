@@ -44,7 +44,7 @@ export default function BillingSettingsTab({ onManageSubscription }: BillingSett
       >
         <Box>
           <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
-            Pro plan · $29/user/month
+            Pro plan · ₹29/user/month
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.82rem', mt: 0.25 }}>
             Renews July 30, 2026 · 24 seats

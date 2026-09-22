@@ -89,8 +89,6 @@ export const addLocationAsync = createAsyncThunk('locations/addLocationAsync', a
         name: locToAdd.name,
         address: locToAdd.address,
         type: locToAdd.type,
-        asset_count: locToAdd.assetsCount,
-        employee_count: locToAdd.employeesCount,
       }]);
       if (error) throw error;
     }
@@ -107,8 +105,6 @@ export const updateLocationAsync = createAsyncThunk('locations/updateLocationAsy
         name: loc.name,
         address: loc.address,
         type: loc.type,
-        asset_count: loc.assetsCount,
-        employee_count: loc.employeesCount,
       }).eq('id', loc.id);
       if (error) throw error;
     }

@@ -109,7 +109,7 @@ const initialState: EmployeesState = {
 export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async (_, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from('employees').select('*');
+      const { data, error } = await supabase.from('v_employees').select('*');
       if (error) throw error;
       if (data) {
         return data.map((row) => ({
@@ -117,7 +117,9 @@ export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', async
           name: row.name,
           role: row.role,
           department: row.department,
+          departmentId: row.department_id,
           location: row.location,
+          locationId: row.location_id,
           email: row.email,
           joinedDate: row.joined_date,
           avatarBg: row.avatar_bg,
@@ -184,8 +186,8 @@ export const addEmployeeAsync = createAsyncThunk(
           id: empToAdd.id,
           name: empToAdd.name,
           role: empToAdd.role,
-          department: empToAdd.department,
-          location: empToAdd.location,
+          department_id: empToAdd.departmentId,
+          location_id: empToAdd.locationId,
           email: empToAdd.email,
           joined_date: empToAdd.joinedDate,
           avatar_bg: empToAdd.avatarBg,
@@ -214,15 +216,17 @@ export const deleteEmployeeAsync = createAsyncThunk('employees/deleteEmployeeAsy
 export const updateEmployeeAsync = createAsyncThunk('employees/updateEmployeeAsync', async (employee: Employee, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('employees').update({
+      const updatePayload: Record<string, any> = {
         name: employee.name,
         role: employee.role,
-        department: employee.department,
-        location: employee.location,
         email: employee.email,
         joined_date: employee.joinedDate,
         avatar_bg: employee.avatarBg,
-      }).eq('id', employee.id);
+      };
+      if (employee.departmentId) updatePayload.department_id = employee.departmentId;
+      if (employee.locationId) updatePayload.location_id = employee.locationId;
+      
+      const { error } = await supabase.from('employees').update(updatePayload).eq('id', employee.id);
       if (error) throw error;
     }
     return employee;

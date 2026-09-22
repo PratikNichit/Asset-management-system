@@ -114,32 +114,35 @@ export default function DashboardPage({
     ];
   }, [statsData, isLoading, theme.palette.mode, theme.palette.customColors]);
 
-  const quickActionsList = useMemo(() => [
-    {
-      id: 'add-asset',
-      label: 'Add new asset',
-      icon: <AddCircleOutlinedIcon fontSize="small" />,
-      onClick: handleNewAsset,
-    },
-    {
-      id: 'assign',
-      label: 'Assign to employee',
-      icon: <AssignmentIndOutlinedIcon fontSize="small" />,
-      onClick: () => navigate('/assign-asset'),
-    },
-    {
-      id: 'maintenance',
-      label: 'Schedule maintenance',
-      icon: <BuildOutlinedIcon fontSize="small" />,
-      onClick: () => navigate('/maintenance/schedule'),
-    },
-    {
-      id: 'qr',
-      label: 'Generate QR labels',
-      icon: <QrCodeOutlinedIcon fontSize="small" />,
-      onClick: () => navigate('/assets'),
-    },
-  ], [handleNewAsset, navigate]);
+  const quickActionsList = useMemo(
+    () => [
+      {
+        id: "add-asset",
+        label: "Add new asset",
+        icon: <AddCircleOutlinedIcon fontSize="small" />,
+        onClick: () => navigate("/assets/new"),
+      },
+      {
+        id: "assign",
+        label: "Assign to employee",
+        icon: <AssignmentIndOutlinedIcon fontSize="small" />,
+        onClick: () => navigate("/assign-asset"),
+      },
+      {
+        id: "maintenance",
+        label: "Schedule maintenance",
+        icon: <BuildOutlinedIcon fontSize="small" />,
+        onClick: () => navigate("/maintenance/schedule"),
+      },
+      {
+        id: "qr",
+        label: "Generate QR labels",
+        icon: <QrCodeOutlinedIcon fontSize="small" />,
+        onClick: () => navigate("/assets"),
+      },
+    ],
+    [handleNewAsset, navigate],
+  );
 
   useEffect(() => {
     setBreadcrumbLinks([

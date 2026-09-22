@@ -85,7 +85,7 @@ export default function EditWorkOrderModal({
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField
-              label="Cost (USD)"
+              label="Cost (₹)"
               type="number"
               value={form.costUsd}
               onChange={(e) => setForm((prev) => prev ? { ...prev, costUsd: Number(e.target.value) } : prev)}

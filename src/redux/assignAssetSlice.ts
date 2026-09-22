@@ -82,13 +82,25 @@ export const confirmAssignment = createAsyncThunk(
 
     try {
       if (isSupabaseConfigured()) {
+        // Close existing open assignment if any
+        if (asset.assignedToId) {
+          const { error: closeError } = await supabase
+            .from('asset_assignments')
+            .update({ return_date: state.assignAsset.handoverDate })
+            .eq('asset_id', selectedAssetId)
+            .is('return_date', null);
+            
+          if (closeError) throw closeError;
+        }
+
         const { error } = await supabase
-          .from('assets')
-          .update({
-            assigned_to: employee.name,
-            status: 'In Use',
-          })
-          .eq('id', selectedAssetId);
+          .from('asset_assignments')
+          .insert({
+             asset_id: selectedAssetId,
+             employee_id: selectedEmployeeId,
+             assigned_date: state.assignAsset.handoverDate,
+             notes: state.assignAsset.notes
+          });
 
         if (error) throw error;
       }

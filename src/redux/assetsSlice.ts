@@ -163,12 +163,29 @@ const initialState: AssetsState = {
   error: null,
 };
 
+export const getNextAssetId = (assets: Asset[]): string => {
+  if (!assets || assets.length === 0) return 'AST-00001';
+  let maxNum = 0;
+  for (const asset of assets) {
+    if (!asset || !asset.id) continue;
+    const match = asset.id.match(/\d+/g);
+    if (match) {
+      const num = parseInt(match[match.length - 1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  const nextNum = maxNum > 0 ? maxNum + 1 : assets.length + 1;
+  return `AST-${String(nextNum).padStart(5, '0')}`;
+};
+
 // ─── Async Thunks for Supabase ────────────────────────────────────────────────
 
 export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from('assets').select('*');
+      const { data, error } = await supabase.from('v_assets').select('*');
       if (error) throw error;
       if (data) {
         return data.map((row) => ({
@@ -176,10 +193,14 @@ export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { re
           name: row.name,
           code: row.code,
           category: row.category,
+          categoryId: row.category_id,
           serial: row.serial,
           department: row.department,
+          departmentId: row.department_id,
           location: row.location,
+          locationId: row.location_id,
           assignedTo: row.assigned_to,
+          assignedToId: row.assigned_to_id,
           warrantyExpiry: row.warranty_expiry,
           status: row.status,
         })) as Asset[];
@@ -194,21 +215,39 @@ export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { re
 export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (newAsset: Asset, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
+      const databaseStatus = {
+        Available: 'Available',
+        'In Use': 'Assigned',
+        Maintenance: 'In Maintenance',
+        'Under Maintenance': 'In Maintenance',
+        Retired: 'Retired',
+        Disposed: 'Lost',
+      }[newAsset.status];
+
       const { error } = await supabase.from('assets').insert([
         {
           id: newAsset.id,
           name: newAsset.name,
           code: newAsset.code,
-          category: newAsset.category,
+          category_id: newAsset.categoryId,
           serial: newAsset.serial,
-          department: newAsset.department,
-          location: newAsset.location,
-          assigned_to: newAsset.assignedTo,
+          department_id: newAsset.departmentId,
+          location_id: newAsset.locationId,
           warranty_expiry: newAsset.warrantyExpiry,
-          status: newAsset.status,
+          status: databaseStatus ?? 'Available',
         },
       ]);
       if (error) throw error;
+
+      if (newAsset.assignedToId && newAsset.assignedToId !== 'Unassigned') {
+        const { error: assignError } = await supabase.from('asset_assignments').insert([{
+          asset_id: newAsset.id,
+          employee_id: newAsset.assignedToId,
+          assigned_date: new Date().toISOString().split('T')[0],
+          notes: 'Assigned upon creation'
+        }]);
+        if (assignError) throw assignError;
+      }
     }
     return newAsset;
   } catch (err) {
@@ -219,23 +258,19 @@ export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (new
 export const updateAssetAsync = createAsyncThunk('assets/updateAssetAsync', async (asset: Asset, { rejectWithValue }) => {
   try {
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('assets').update({
+      const updatePayload: Record<string, any> = {
         name: asset.name,
         code: asset.code,
-        category: asset.category,
         serial: asset.serial,
-        department: asset.department,
-        location: asset.location,
-        assigned_to: asset.assignedTo,
         warranty_expiry: asset.warrantyExpiry,
-        status: asset.status,
-        brand: asset.brand,
-        model: asset.model,
-        purchase_date: asset.purchaseDate,
-        purchase_cost: asset.purchaseCost,
-        vendor: asset.vendor,
-        description: asset.description,
-      }).eq('id', asset.id);
+      };
+      
+      if (asset.categoryId) updatePayload.category_id = asset.categoryId;
+      if (asset.departmentId) updatePayload.department_id = asset.departmentId;
+      if (asset.locationId) updatePayload.location_id = asset.locationId;
+      if (asset.status === 'Retired' || asset.status === 'Disposed') updatePayload.status = asset.status;
+      
+      const { error } = await supabase.from('assets').update(updatePayload).eq('id', asset.id);
       if (error) throw error;
     }
     return asset;

@@ -16,14 +16,16 @@ const STATUS_OPTIONS = [
 interface Props {
   state: any;
   setters: any;
-  departmentsList: string[];
-  locationsList: string[];
+  handlers: any;
+  departmentsList: { id: string; name: string }[];
+  locationsList: { id: string; name: string }[];
   employeesList: { id: string; name: string }[];
 }
 
-export default function AssignmentStep({ state, setters, departmentsList, locationsList, employeesList }: Props) {
+export default function AssignmentStep({ state, setters, handlers, departmentsList, locationsList, employeesList }: Props) {
   const { department, location, assignedEmployee, status } = state;
   const { setDepartment, setLocation, setAssignedEmployee, setStatus } = setters;
+  const { showError } = handlers;
 
   return (
     <>
@@ -45,11 +47,17 @@ export default function AssignmentStep({ state, setters, departmentsList, locati
             size="medium"
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
+            onBlur={() => setters.setTouched((t: any) => ({ ...t, department: true }))}
+            error={Boolean(showError(2, 'department'))}
+            helperText={showError(2, 'department') || ' '}
             slotProps={{
               select: {
                 displayEmpty: true,
-                renderValue: (selected: unknown) =>
-                  !selected || selected === '' ? <span style={{ color: '#94A3B8' }}>Select department</span> : String(selected),
+                renderValue: (selected: unknown) => {
+                  if (!selected || selected === '') return <span style={{ color: '#94A3B8' }}>Select department</span>;
+                  const found = departmentsList.find(d => d.id === selected);
+                  return found ? found.name : String(selected);
+                }
               },
             }}
             sx={fieldSx}
@@ -58,8 +66,8 @@ export default function AssignmentStep({ state, setters, departmentsList, locati
               Select department
             </MenuItem>
             {departmentsList.map((d) => (
-              <MenuItem key={d} value={d} sx={{ fontSize: '0.9rem' }}>
-                {d}
+              <MenuItem key={d.id} value={d.id} sx={{ fontSize: '0.9rem' }}>
+                {d.name}
               </MenuItem>
             ))}
           </TextField>
@@ -72,11 +80,17 @@ export default function AssignmentStep({ state, setters, departmentsList, locati
             size="medium"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
+            onBlur={() => setters.setTouched((t: any) => ({ ...t, location: true }))}
+            error={Boolean(showError(2, 'location'))}
+            helperText={showError(2, 'location') || ' '}
             slotProps={{
               select: {
                 displayEmpty: true,
-                renderValue: (selected: unknown) =>
-                  !selected || selected === '' ? <span style={{ color: '#94A3B8' }}>Select location</span> : String(selected),
+                renderValue: (selected: unknown) => {
+                  if (!selected || selected === '') return <span style={{ color: '#94A3B8' }}>Select location</span>;
+                  const found = locationsList.find(l => l.id === selected);
+                  return found ? found.name : String(selected);
+                }
               },
             }}
             sx={fieldSx}
@@ -85,8 +99,8 @@ export default function AssignmentStep({ state, setters, departmentsList, locati
               Select location
             </MenuItem>
             {locationsList.map((l) => (
-              <MenuItem key={l} value={l} sx={{ fontSize: '0.9rem' }}>
-                {l}
+              <MenuItem key={l.id} value={l.id} sx={{ fontSize: '0.9rem' }}>
+                {l.name}
               </MenuItem>
             ))}
           </TextField>
@@ -96,12 +110,12 @@ export default function AssignmentStep({ state, setters, departmentsList, locati
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
         <Box>
           <Typography sx={labelSx}>Assigned employee</Typography>
-          <TextField select fullWidth size="medium" value={assignedEmployee} onChange={(e) => setAssignedEmployee(e.target.value)} sx={fieldSx}>
+          <TextField select fullWidth size="medium" value={assignedEmployee} onChange={(e) => setAssignedEmployee(e.target.value)} sx={fieldSx} slotProps={{ select: { renderValue: (selected: unknown) => { if (selected === 'Unassigned') return 'Unassigned'; const found = employeesList.find(e => e.id === selected); return found ? found.name : String(selected); } } }}>
             <MenuItem value="Unassigned" sx={{ fontSize: '0.9rem' }}>
               Unassigned
             </MenuItem>
             {employeesList.map((emp) => (
-              <MenuItem key={emp.id} value={emp.name} sx={{ fontSize: '0.9rem' }}>
+              <MenuItem key={emp.id} value={emp.id} sx={{ fontSize: '0.9rem' }}>
                 {emp.name}
               </MenuItem>
             ))}

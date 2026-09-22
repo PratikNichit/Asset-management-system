@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -29,6 +29,7 @@ export interface AssetsPageProps {
 
 export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { setBreadcrumbLinks, selectedAssetId, setSelectedAssetId } = useLayout();
 
@@ -62,6 +63,15 @@ export default function AssetsPage({ organizationName = 'Atlas' }: AssetsPagePro
       ]);
     }
   }, [selectedAsset, organizationName, setBreadcrumbLinks]);
+
+  useEffect(() => {
+    const notification = location.state?.assetNotification as
+      | { message: string; severity: 'success' | 'error' }
+      | undefined;
+    if (!notification) return;
+    setSnackbar({ open: true, ...notification });
+    navigate('/assets', { replace: true, state: null });
+  }, [location.state, navigate]);
 
   const inUseCount = useMemo(
     () => assetList.filter((a) => a.status === 'In Use').length,

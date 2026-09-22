@@ -3,7 +3,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
 import AddIcon from '@mui/icons-material/Add';
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { selectAllCategories, updateCategoryAsync, deleteCategoryAsync } from '../redux/categoriesSlice';
@@ -85,25 +87,62 @@ export default function CategoriesPage({ organizationName = 'Atlas' }: Categorie
 
   // ── Render Categories Grid Overview ───────────────────────────────────────
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        width: '100%',
+        maxWidth: 1200,
+        mx: 'auto',
+      }}
+    >
       {/* ── Header Bar ───────────────────────────────────────────────────────── */}
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
+          flexDirection: { xs: 'column', sm: 'row' },
           gap: 2,
+          pb: 3,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
         }}
       >
         <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                fontWeight: 800,
+                fontFamily: '"Manrope", sans-serif',
+                fontSize: '1.75rem',
+                letterSpacing: '-0.02em',
+                color: 'text.primary',
+              }}
+            >
+              Categories
+            </Typography>
+            <Chip
+              label={categories.length}
+              size="small"
+              aria-label={`${categories.length} categories`}
+              sx={{ 
+                fontWeight: 700, 
+                height: 24, 
+                borderRadius: 1.5,
+                bgcolor: 'action.selected',
+                color: 'text.primary'
+              }}
+            />
+          </Box>
           <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 0.75, fontSize: '0.9rem', maxWidth: 520, lineHeight: 1.6 }}
           >
-            Categories
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
             Group assets by type. Categories power filtering and reporting.
           </Typography>
         </Box>
@@ -118,28 +157,63 @@ export default function CategoriesPage({ organizationName = 'Atlas' }: Categorie
         </AppButton>
       </Box>
 
-      {/* ── Categories Grid ─────────────────────────────────────────────────── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-            lg: 'repeat(4, 1fr)',
-          },
-          gap: 2.5,
-        }}
-      >
-        {categories.map((cat) => (
-          <CategoryCard
-            key={cat.id}
-            category={cat}
-            onEdit={handleEditCategory}
-            onDelete={handleDeleteCategory}
-          />
-        ))}
-      </Box>
+      {/* ── Categories Grid (3 columns on desktop) ──────────────────────────── */}
+      {categories.length > 0 ? (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(0, 1fr))',
+            },
+            gap: { xs: 2, md: 3 },
+            alignItems: 'stretch',
+            '& > *': { minWidth: 0, height: '100%' },
+          }}
+        >
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.id}
+              category={cat}
+              onEdit={handleEditCategory}
+              onDelete={handleDeleteCategory}
+            />
+          ))}
+        </Box>
+      ) : (
+        // ── Empty State ──────────────────────────────────────────────────────
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1.5,
+            py: 8,
+            px: 3,
+            border: '1.5px dashed',
+            borderColor: 'divider',
+            borderRadius: 3,
+          }}
+        >
+          <CategoryOutlinedIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            No categories yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360 }}>
+            Create your first category to start grouping assets by type.
+          </Typography>
+          <AppButton
+            variant="default"
+            size="sm"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreatingCategory(true)}
+          >
+            New category
+          </AppButton>
+        </Box>
+      )}
 
       {/* ── Modals & Dialogs ─────────────────────────────────────────────────── */}
       <EditCategoryModal

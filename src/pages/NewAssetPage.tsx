@@ -103,18 +103,21 @@ export default function NewAssetPage({
   const reduxLocations = useAppSelector(selectAllLocations);
   const reduxEmployees = useAppSelector(selectAllEmployeesList);
 
-  const categoriesList = reduxCategories.length > 0 ? reduxCategories.map((c) => c.name) : DEFAULT_CATEGORIES;
-  const departmentsList = reduxDepartments.length > 0 ? reduxDepartments.map((d) => d.name) : ['Engineering', 'Design', 'Operations', 'Production', 'Quality', 'Maintenance', 'Admin', 'Finance'];
-  const locationsList = reduxLocations.length > 0 ? reduxLocations.map((l) => l.name) : ['HQ — Bengaluru', 'Plant 1 — Pune', 'Warehouse A', 'R&D Lab'];
+  const categoriesList = reduxCategories.length > 0 ? reduxCategories : DEFAULT_CATEGORIES.map((c, i) => ({ id: `CAT-00${i+1}`, name: c }));
+  const departmentsList = reduxDepartments.length > 0 ? reduxDepartments : ['Engineering', 'Design', 'Operations', 'Production', 'Quality', 'Maintenance', 'Admin', 'Finance'].map((d, i) => ({ id: `DEP-00${i+1}`, name: d }));
+  const locationsList = reduxLocations.length > 0 ? reduxLocations : ['HQ — Bengaluru', 'Plant 1 — Pune', 'Warehouse A', 'R&D Lab'].map((l, i) => ({ id: `LOC-00${i+1}`, name: l }));
 
   // Dispatch the new asset to Redux (and Supabase if configured), then navigate away.
   const handleSuccess = useCallback(
     async (newAsset: Asset) => {
-      await dispatch(addAssetAsync(newAsset));
+      await dispatch(addAssetAsync(newAsset)).unwrap();
       if (onSuccess) {
         onSuccess(newAsset);
       } else {
-        navigate('/assets', { replace: true });
+        navigate('/assets', {
+          replace: true,
+          state: { assetNotification: { message: 'Asset created successfully.', severity: 'success' } },
+        });
       }
     },
     [dispatch, navigate, onSuccess],
@@ -215,7 +218,7 @@ export default function NewAssetPage({
           <PurchaseWarrantyStep state={form.state} setters={form.setters} handlers={form.handlers} />
         )}
         {form.state.activeStep === 2 && (
-          <AssignmentStep state={form.state} setters={form.setters} departmentsList={departmentsList} locationsList={locationsList} employeesList={reduxEmployees} />
+          <AssignmentStep state={form.state} setters={form.setters} handlers={form.handlers} departmentsList={departmentsList} locationsList={locationsList} employeesList={reduxEmployees} />
         )}
         {form.state.activeStep === 3 && (
           <MediaDescriptionStep state={form.state} setters={form.setters} refs={form.refs} handlers={form.handlers} />

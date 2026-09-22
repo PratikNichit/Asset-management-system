@@ -20,29 +20,26 @@ interface AddDepartmentModalProps {
 export default function AddDepartmentModal({ open, onClose, onAdd }: AddDepartmentModalProps) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const [head, setHead] = useState('');
-  const [membersCount, setMembersCount] = useState<number | ''>(10);
-  const [assetsCount, setAssetsCount] = useState<number | ''>(25);
+  const [headId, setHeadId] = useState('');
+  const [locationId, setLocationId] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !head.trim()) return;
+    if (!name.trim()) return;
 
     const generatedCode = code.trim() || name.substring(0, 2).toUpperCase();
 
     onAdd({
       name: name.trim(),
       code: generatedCode.toUpperCase(),
-      head: head.trim(),
-      membersCount: Number(membersCount) || 0,
-      assetsCount: Number(assetsCount) || 0,
-    });
+      headId: headId || undefined,
+      locationId: locationId || undefined,
+    } as any);
 
     setName('');
     setCode('');
-    setHead('');
-    setMembersCount(10);
-    setAssetsCount(25);
+    setHeadId('');
+    setLocationId('');
     onClose();
   };
 
@@ -90,32 +87,22 @@ export default function AddDepartmentModal({ open, onClose, onAdd }: AddDepartme
             />
           </Box>
 
-          <TextField
-            label="Department Head"
-            required
-            fullWidth
-            size="small"
-            value={head}
-            onChange={(e) => setHead(e.target.value)}
-            placeholder="e.g. Anika Mehta"
-          />
-
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
             <TextField
-              label="Initial Members Count"
-              type="number"
+              label="Department Head ID"
               fullWidth
               size="small"
-              value={membersCount}
-              onChange={(e) => setMembersCount(e.target.value === '' ? '' : Number(e.target.value))}
+              value={headId}
+              onChange={(e) => setHeadId(e.target.value)}
+              placeholder="e.g. EMP-001"
             />
             <TextField
-              label="Initial Assets Count"
-              type="number"
+              label="Location ID"
               fullWidth
               size="small"
-              value={assetsCount}
-              onChange={(e) => setAssetsCount(e.target.value === '' ? '' : Number(e.target.value))}
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+              placeholder="e.g. LOC-001"
             />
           </Box>
         </DialogContent>
@@ -124,7 +111,7 @@ export default function AddDepartmentModal({ open, onClose, onAdd }: AddDepartme
           <AppButton variant="outline" size="sm" onClick={onClose}>
             Cancel
           </AppButton>
-          <AppButton variant="default" size="sm" type="submit" disabled={!name || !head}>
+          <AppButton variant="default" size="sm" type="submit" disabled={!name}>
             Create Department
           </AppButton>
         </DialogActions>

@@ -3,8 +3,10 @@ export interface Employee {
   name: string;
   role: string;
   department: string;
+  departmentId?: string;
   /** Office / site location, e.g. "HQ — Bengaluru" */
   location: string;
+  locationId?: string;
   email: string;
   joinedDate: string;
   phone?: string;
