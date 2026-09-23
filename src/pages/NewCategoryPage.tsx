@@ -11,9 +11,15 @@ import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 
 import { useAppDispatch } from '../app/hooks';
 import { addCategoryAsync } from '../redux/categoriesSlice';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { AssetCategoryItem, CategoryIconType } from '../types/category';
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 export interface NewCategoryPageProps {
   organizationName?: string;
@@ -121,40 +127,41 @@ export default function NewCategoryPage({
           gap: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
-          >
-            New category
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
-            Classify assets and set defaults for depreciation and servicing.
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           {onCancel && (
             <AppButton
               variant="outline"
-              size="sm"
-              startIcon={<ArrowBackIcon />}
+              size="icon"
               onClick={onCancel}
-              sx={{ borderColor: 'customColors.borderLight', color: 'text.primary', bgcolor: 'background.paper' }}
+              aria-label="Back to categories"
+              sx={outlineButtonSx}
             >
-              Cancel
+              <ArrowBackIcon fontSize="small" />
             </AppButton>
           )}
-          <AppButton
-            variant="default"
-            size="sm"
-            startIcon={<CategoryOutlinedIcon />}
-            onClick={() => handleSubmit()}
-            loading={isSubmitting}
-          >
-            Create category
-          </AppButton>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+            >
+              New category
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
+              Classify assets and set defaults for depreciation and servicing.
+            </Typography>
+          </Box>
         </Box>
+
+        <AppButton
+          variant="default"
+          size="sm"
+          startIcon={<CategoryOutlinedIcon />}
+          onClick={() => handleSubmit()}
+          loading={isSubmitting}
+        >
+          Create category
+        </AppButton>
       </Box>
 
       {/* ── Main Form Cards Stack ────────────────────────────────────────────── */}

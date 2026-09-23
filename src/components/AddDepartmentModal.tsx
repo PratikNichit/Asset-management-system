@@ -51,7 +51,7 @@ export default function AddDepartmentModal({ open, onClose, onAdd }: AddDepartme
       fullWidth
       slotProps={{
         paper: {
-          sx: { borderRadius: 3, p: 1, bgcolor: 'background.paper', color: 'text.primary' },
+          sx: { borderRadius: 3, p: 1 },
         },
       }}
     >

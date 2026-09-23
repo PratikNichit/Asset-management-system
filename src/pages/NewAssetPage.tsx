@@ -20,6 +20,7 @@ import { selectAllDepartments } from '../redux/departmentsSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
 import { selectAllEmployeesList } from '../redux/employeesSlice';
 import { addAssetAsync } from '../redux/assetsSlice';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { Asset } from '../types/asset';
@@ -47,6 +48,11 @@ const DEFAULT_CATEGORIES = [
   'Furniture',
   'Software Licenses',
 ];
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 // ── Custom stepper connector & icon so it matches the Atlas purple theme ────
 const AtlasConnector = styled(StepConnector)(({ theme }) => ({
@@ -142,38 +148,38 @@ export default function NewAssetPage({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5, maxWidth: 880, mx: 'auto', width: '100%' }}>
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-        <Box>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}
-          >
-            New asset
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 0.5, fontSize: '0.9rem', color: 'text.secondary', fontFamily: '"Manrope", sans-serif' }}>
-            Step {form.state.activeStep + 1} of {STEPS.length} — {STEPS[form.state.activeStep].helper}
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {onCancel && (
-            <AppButton
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.9rem', fontFamily: '"Manrope", sans-serif', px: 1.5 }}
-            >
-              Cancel
-            </AppButton>
-          )}
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           <AppButton
             variant="outline"
-            size="sm"
-            onClick={form.handlers.handleSaveDraft}
-            sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, fontFamily: '"Manrope", sans-serif', textTransform: 'none', px: 2, py: 0.9 }}
+            size="icon"
+            onClick={handleCancelOrBack}
+            aria-label="Back to assets"
+            sx={outlineButtonSx}
           >
-            Save as draft
+            <ArrowBackIcon fontSize="small" />
           </AppButton>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}
+            >
+              New asset
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, fontSize: '0.9rem', color: 'text.secondary', fontFamily: '"Manrope", sans-serif' }}>
+              Step {form.state.activeStep + 1} of {STEPS.length} — {STEPS[form.state.activeStep].helper}
+            </Typography>
+          </Box>
         </Box>
+
+        <AppButton
+          variant="outline"
+          size="sm"
+          onClick={form.handlers.handleSaveDraft}
+          sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, fontFamily: '"Manrope", sans-serif', textTransform: 'none', px: 2, py: 0.9 }}
+        >
+          Save as draft
+        </AppButton>
       </Box>
 
       {/* ── Stepper ─────────────────────────────────────────────────────── */}

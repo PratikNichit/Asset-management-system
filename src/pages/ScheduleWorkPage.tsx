@@ -20,6 +20,7 @@ import { selectAllEmployeesList } from '../redux/employeesSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
+import type { SxProps, Theme } from '@mui/material/styles';
 import WorkOrderFormSection from '../components/schedule-work/WorkOrderFormSection';
 import ScheduleAssignmentSection from '../components/schedule-work/ScheduleAssignmentSection';
 import ReviewSection from '../components/schedule-work/ReviewSection';
@@ -32,6 +33,11 @@ export interface ScheduleWorkPageProps {
 }
 
 const STEPS = ['Work order', 'Schedule & assignment', 'Review & confirm'];
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 /**
  * ScheduleWorkPage container component.
@@ -145,30 +151,32 @@ export default function ScheduleWorkPage({
           mb: 3,
         }}
       >
-        <Box>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif', lineHeight: 1.2 }}
-          >
-            Schedule work
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.85rem' }}
-          >
-            Step {activeStep + 1} of {STEPS.length}: {STEPS[activeStep]}
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'center', flexShrink: 0 }}>
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           <AppButton
             id="schedule-work-cancel-btn"
             variant="outline"
-            startIcon={<ArrowBackIcon />}
+            size="icon"
             onClick={handleCancel}
+            aria-label="Back to maintenance"
+            sx={outlineButtonSx}
           >
-            Cancel
+            <ArrowBackIcon fontSize="small" />
           </AppButton>
+          <Box>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif', lineHeight: 1.2 }}
+            >
+              Schedule work
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.85rem' }}
+            >
+              Step {activeStep + 1} of {STEPS.length}: {STEPS[activeStep]}
+            </Typography>
+          </Box>
         </Box>
       </Box>
 

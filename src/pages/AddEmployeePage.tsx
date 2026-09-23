@@ -14,8 +14,14 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { addEmployeeAsync, selectAllEmployeesList, getNextEmployeeId, fetchEmployees } from '../redux/employeesSlice';
 import { selectAllDepartments } from '../redux/departmentsSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 export interface AddEmployeePageProps {
   organizationName?: string;
@@ -131,41 +137,42 @@ export default function AddEmployeePage({
           gap: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
-          >
-            Add employee
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
-            Create a person record so assets can be assigned to them.
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           {onCancel && (
             <AppButton
               variant="outline"
-              size="sm"
-              startIcon={<ArrowBackIcon />}
+              size="icon"
               onClick={onCancel}
-              sx={{ borderColor: 'customColors.borderLight', color: 'text.primary', bgcolor: 'background.paper' }}
+              aria-label="Back to employees"
+              sx={outlineButtonSx}
             >
-              Cancel
+              <ArrowBackIcon fontSize="small" />
             </AppButton>
           )}
-          <AppButton
-            variant="default"
-            size="sm"
-            startIcon={<PersonAddAlt1OutlinedIcon />}
-            onClick={() => handleSubmit()}
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            Add employee
-          </AppButton>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+            >
+              Add employee
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
+              Create a person record so assets can be assigned to them.
+            </Typography>
+          </Box>
         </Box>
+
+        <AppButton
+          variant="default"
+          size="sm"
+          startIcon={<PersonAddAlt1OutlinedIcon />}
+          onClick={() => handleSubmit()}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          Add employee
+        </AppButton>
       </Box>
 
       {/* ── Main Form Content (2 Columns Layout) ─────────────────────────────── */}
