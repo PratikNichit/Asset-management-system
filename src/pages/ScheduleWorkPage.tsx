@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
@@ -24,7 +26,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import WorkOrderFormSection from '../components/schedule-work/WorkOrderFormSection';
 import ScheduleAssignmentSection from '../components/schedule-work/ScheduleAssignmentSection';
 import ReviewSection from '../components/schedule-work/ReviewSection';
-import ScheduleWorkSidebar from '../components/schedule-work/ScheduleWorkSidebar';
+import ScheduleWorkStepper from '../components/schedule-work/ScheduleWorkStepper';
 
 export interface ScheduleWorkPageProps {
   organizationName?: string;
@@ -144,104 +146,134 @@ export default function ScheduleWorkPage({
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
+          alignItems: 'center',
           gap: 2,
-          flexWrap: 'wrap',
           mb: 3,
         }}
       >
-        {/* Left side: back button + title */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-          <AppButton
-            id="schedule-work-cancel-btn"
-            variant="outline"
-            size="icon"
-            onClick={handleCancel}
-            aria-label="Back to maintenance"
-            sx={outlineButtonSx}
+        <AppButton
+          id="schedule-work-cancel-btn"
+          variant="outline"
+          size="icon"
+          onClick={handleCancel}
+          aria-label="Back to maintenance"
+          sx={outlineButtonSx}
+        >
+          <ArrowBackIcon fontSize="small" />
+        </AppButton>
+        <Box>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif', lineHeight: 1.2 }}
           >
-            <ArrowBackIcon fontSize="small" />
-          </AppButton>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{ fontWeight: 700, fontFamily: '"Manrope", sans-serif', lineHeight: 1.2 }}
-            >
-              Schedule work
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.85rem' }}
-            >
-              Step {activeStep + 1} of {STEPS.length}: {STEPS[activeStep]}
-            </Typography>
-          </Box>
+            Schedule work
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ mt: 0.25, color: 'text.secondary', fontSize: '0.82rem' }}
+          >
+            Step {activeStep + 1} of {STEPS.length} &ndash; {STEPS[activeStep]}
+          </Typography>
         </Box>
       </Box>
 
-      {/* ── Main Layout ─────────────────────────────────────────────────── */}
-      <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <Box sx={{ flex: '1 1 480px', minWidth: 0 }}>
-          {activeStep === 0 && (
-            <WorkOrderFormSection
-              form={form}
-              assets={assets}
-              onFieldChange={handleFieldChange}
-              showErrors={attemptedStep === 0}
-            />
-          )}
-
-          {activeStep === 1 && (
-            <ScheduleAssignmentSection
-              form={form}
-              employees={employees}
-              locations={locations}
-              onFieldChange={handleFieldChange}
-              showErrors={attemptedStep === 1}
-            />
-          )}
-
-          {activeStep === 2 && (
-            <ReviewSection
-              form={form}
-              assets={assets}
-              employees={employees}
-              locations={locations}
-              onFieldChange={handleFieldChange}
-            />
-          )}
-
-          {/* Step navigation */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-            <AppButton
-              id="schedule-work-back-btn"
-              variant="ghost"
-              startIcon={<ArrowBackIcon />}
-              onClick={handleBack}
-              disabled={activeStep === 0}
-            >
-              Back
-            </AppButton>
-            <AppButton
-              id="schedule-work-primary-btn"
-              variant="default"
-              endIcon={isLastStep ? undefined : <ArrowForwardIcon />}
-              startIcon={isLastStep ? <BuildOutlinedIcon /> : undefined}
-              onClick={handlePrimaryAction}
-              disabled={isLastStep && !canSubmit}
-            >
-              {isLastStep ? 'Schedule work' : 'Next'}
-            </AppButton>
-          </Box>
-        </Box>
-
-        <ScheduleWorkSidebar
+      {/* ── Horizontal Stepper ───────────────────────────────────────────── */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          mb: 2.5,
+          borderRadius: 2,
+          borderColor: 'customColors.borderLight',
+        }}
+      >
+        <ScheduleWorkStepper
           steps={STEPS}
           activeStep={activeStep}
           stepValid={stepValid}
           onStepClick={goToStep}
         />
+      </Paper>
+
+      {/* ── Form Content ─────────────────────────────────────────────────── */}
+      {activeStep === 0 && (
+        <WorkOrderFormSection
+          form={form}
+          assets={assets}
+          onFieldChange={handleFieldChange}
+          showErrors={attemptedStep === 0}
+        />
+      )}
+
+      {activeStep === 1 && (
+        <ScheduleAssignmentSection
+          form={form}
+          employees={employees}
+          locations={locations}
+          onFieldChange={handleFieldChange}
+          showErrors={attemptedStep === 1}
+        />
+      )}
+
+      {activeStep === 2 && (
+        <ReviewSection
+          form={form}
+          assets={assets}
+          employees={employees}
+          locations={locations}
+          onFieldChange={handleFieldChange}
+        />
+      )}
+
+      {/* ── Info callout ─────────────────────────────────────────────────── */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2,
+          mt: 2,
+          borderRadius: 2,
+          borderColor: 'primary.main',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'light'
+              ? 'rgba(109, 93, 246, 0.06)'
+              : 'rgba(109, 93, 246, 0.12)',
+          display: 'flex',
+          gap: 1.25,
+        }}
+      >
+        <InfoOutlinedIcon
+          sx={{ fontSize: 17, color: 'primary.main', mt: 0.1, flexShrink: 0 }}
+        />
+        <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', lineHeight: 1.6 }}>
+          Scheduling work sets the asset status to{' '}
+          <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            Maintenance
+          </Box>{' '}
+          on the start date.
+        </Typography>
+      </Paper>
+
+      {/* ── Step navigation ──────────────────────────────────────────────── */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <AppButton
+          id="schedule-work-back-btn"
+          variant="ghost"
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBack}
+          disabled={activeStep === 0}
+        >
+          Back
+        </AppButton>
+        <AppButton
+          id="schedule-work-primary-btn"
+          variant="default"
+          endIcon={isLastStep ? undefined : <ArrowForwardIcon />}
+          startIcon={isLastStep ? <BuildOutlinedIcon /> : undefined}
+          onClick={handlePrimaryAction}
+          disabled={isLastStep && !canSubmit}
+        >
+          {isLastStep ? 'Schedule work' : 'Next'}
+        </AppButton>
       </Box>
     </Box>
   );
