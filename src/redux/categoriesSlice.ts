@@ -12,7 +12,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#EEF2FF',
     iconColor: '#4F46E5',
     description: 'Portable workstation computers, notebooks, and ultrabooks.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 3,
   },
   {
@@ -23,7 +23,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#E0F2FE',
     iconColor: '#0284C7',
     description: 'External display panels, 4K monitors, and desktop screens.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 5,
   },
   {
@@ -34,7 +34,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#DCFCE7',
     iconColor: '#16A34A',
     description: 'Industrial production machinery, presses, and automated tools.',
-    depreciationMethod: 'Declining balance',
+    depreciationMethod: 'Declining Balance',
     usefulLifeYears: 10,
     requiresCalibration: true,
   },
@@ -46,7 +46,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#FEF3C7',
     iconColor: '#D97706',
     description: 'Custom injection molds, casting dyes, and tooling fixtures.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 7,
   },
   {
@@ -57,7 +57,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#FEE2E2',
     iconColor: '#DC2626',
     description: 'Warehouse material handling forklifts, stackers, and pallet trucks.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 8,
     maintenanceInterval: 'Quarterly',
   },
@@ -69,7 +69,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#F3E8FF',
     iconColor: '#9333EA',
     description: 'Mice, mechanical keyboards, docking stations, and headsets.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 2,
   },
   {
@@ -80,7 +80,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#CCFBF1',
     iconColor: '#0D9488',
     description: 'Ergonomic office chairs, standing desks, conference tables.',
-    depreciationMethod: 'Straight line',
+    depreciationMethod: 'Straight Line',
     usefulLifeYears: 7,
   },
   {
@@ -91,7 +91,7 @@ export const INITIAL_CATEGORIES: AssetCategoryItem[] = [
     bgColor: '#E0F2FE',
     iconColor: '#0284C7',
     description: 'Enterprise SaaS subscriptions, CAD software, and OS licenses.',
-    depreciationMethod: 'None',
+    depreciationMethod: undefined,
     usefulLifeYears: 1,
   },
 ];
@@ -126,7 +126,7 @@ export const fetchCategories = createAsyncThunk('categories/fetchCategories', as
           bgColor: row.color || '#EEF2FF',
           iconColor: '#4F46E5',
           description: row.description || '',
-          depreciationMethod: row.depreciation_method || 'Straight line',
+          depreciationMethod: row.depreciation_method || 'Straight Line',
           usefulLifeYears: row.useful_life_years || 3,
         })) as AssetCategoryItem[];
       }
