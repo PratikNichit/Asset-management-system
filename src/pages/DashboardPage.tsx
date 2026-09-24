@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
@@ -13,16 +13,33 @@ import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 import QrCodeOutlinedIcon from '@mui/icons-material/QrCodeOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
+import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import StatCard from '../components/StatCard';
 import QuickActions from '../components/QuickActions';
+import {
+  AssetMovementChart,
+  CategoryDonut,
+  DepartmentBars,
+  type CountDatum,
+} from '../components/DashboardCharts';
+import { RecentActivity, RecentAssetsTable } from '../components/DashboardLists';
 import { useLayout } from '../hooks/useLayout';
 import { getGreeting } from '../utils/greeting';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
+import { fetchAssets, selectAllAssets } from '../redux/assetsSlice';
 import {
   selectDashboardStats,
   selectDashboardLoading,
   selectDashboardError,
+  selectMovement,
+  selectMovementRange,
+  selectAnalyticsLoading,
+  selectRecentActivity,
   fetchDashboardStats,
+  fetchAssetMovement,
+  fetchRecentActivity,
+  movementRangeChanged,
+  type MovementRange,
 } from '../redux/dashboardSlice';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -33,8 +50,24 @@ export interface DashboardPageProps {
   onNewAssetClick?: () => void;
 }
 
+// Group assets by a string field → sorted [{name, value}] (largest first).
+function countBy(items: { [k: string]: unknown }[], field: string, fallback: string, limit?: number): CountDatum[] {
+  const map = new Map<string, number>();
+  for (const item of items) {
+    const key = (item[field] as string | null | undefined)?.trim() || fallback;
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  const sorted = [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  if (limit && sorted.length > limit) {
+    const rest = sorted.slice(limit - 1).reduce((s, d) => s + d.value, 0);
+    return [...sorted.slice(0, limit - 1), { name: 'Other', value: rest }];
+  }
+  return sorted;
+}
+
 /**
- * DashboardPage — Route container component for main asset management overview.
+ * DashboardPage — overview of the asset estate. Every number, chart and list
+ * here is derived from Redux state that is populated from Supabase.
  */
 export default function DashboardPage({
   userName: propUserName,
@@ -48,101 +81,30 @@ export default function DashboardPage({
   const greeting = getGreeting();
 
   const authUser = useAppSelector((state) => state.auth.user);
-  const userName = propUserName || authUser?.name || 'Pratik';
+  const userName = propUserName || authUser?.name || 'there';
 
   const statsData = useAppSelector(selectDashboardStats);
-  const isLoading = useAppSelector(selectDashboardLoading);
+  const statsLoading = useAppSelector(selectDashboardLoading);
   const error = useAppSelector(selectDashboardError);
+  const movement = useAppSelector(selectMovement);
+  const movementRange = useAppSelector(selectMovementRange);
+  const analyticsLoading = useAppSelector(selectAnalyticsLoading);
+  const activity = useAppSelector(selectRecentActivity);
+  const assets = useAppSelector(selectAllAssets);
+  const assetsLoading = useAppSelector((state) => state.assets.isLoading);
 
-  useEffect(() => {
+  const isLoading = statsLoading || analyticsLoading || assetsLoading;
+
+  const loadAll = useCallback(() => {
+    dispatch(fetchAssets());
     dispatch(fetchDashboardStats());
+    dispatch(fetchAssetMovement());
+    dispatch(fetchRecentActivity());
   }, [dispatch]);
 
-  const handleNewAsset = useMemo(() => () => {
-    if (onNewAssetClick) onNewAssetClick();
-    else navigate('/assets/new');
-  }, [onNewAssetClick, navigate]);
-
-  const handleRefresh = () => {
-    dispatch(fetchDashboardStats());
-  };
-
-  const dashboardStats = useMemo(() => {
-    return [
-      {
-        label: 'Total assets',
-        icon: <Inventory2OutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#818CF8' : '#5159D7' }} />,
-        iconBgColor: theme.palette.customColors.primaryTransparent,
-        isLoading,
-        ...statsData.total_assets,
-      },
-      {
-        label: 'Assigned',
-        icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#34D399' : '#20B46B' }} />,
-        iconBgColor: theme.palette.customColors.successTransparent,
-        isLoading,
-        ...statsData.assigned,
-      },
-      {
-        label: 'Available',
-        icon: <GroupsOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#38BDF8' : '#009BD8' }} />,
-        iconBgColor: theme.palette.customColors.infoTransparent,
-        isLoading,
-        ...statsData.available,
-      },
-      {
-        label: 'Under maintenance',
-        icon: <BuildOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#FBBF24' : '#EFA831' }} />,
-        iconBgColor: theme.palette.customColors.warningTransparent,
-        isLoading,
-        ...statsData.under_maintenance,
-      },
-      {
-        label: 'Warranty expiring',
-        icon: <WarningAmberOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#F87171' : '#E62C2C' }} />,
-        iconBgColor: theme.palette.customColors.errorTransparent,
-        isLoading,
-        ...statsData.warranty_expiring,
-      },
-      {
-        label: 'Retired YTD',
-        icon: <ArchiveOutlinedIcon sx={{ fontSize: 16, color: theme.palette.mode === 'dark' ? '#94A3B8' : '#321C00' }} />,
-        iconBgColor: theme.palette.customColors.bgNeutralTransparent1,
-        isLoading,
-        ...statsData.retired_ytd,
-      },
-    ];
-  }, [statsData, isLoading, theme.palette.mode, theme.palette.customColors]);
-
-  const quickActionsList = useMemo(
-    () => [
-      {
-        id: "add-asset",
-        label: "Add new asset",
-        icon: <AddCircleOutlinedIcon fontSize="small" />,
-        onClick: () => navigate("/assets/new"),
-      },
-      {
-        id: "assign",
-        label: "Assign to employee",
-        icon: <AssignmentIndOutlinedIcon fontSize="small" />,
-        onClick: () => navigate("/assign-asset"),
-      },
-      {
-        id: "maintenance",
-        label: "Schedule maintenance",
-        icon: <BuildOutlinedIcon fontSize="small" />,
-        onClick: () => navigate("/maintenance/schedule"),
-      },
-      {
-        id: "qr",
-        label: "Generate QR labels",
-        icon: <QrCodeOutlinedIcon fontSize="small" />,
-        onClick: () => navigate("/assets"),
-      },
-    ],
-    [handleNewAsset, navigate],
-  );
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
 
   useEffect(() => {
     setBreadcrumbLinks([
@@ -151,211 +113,176 @@ export default function DashboardPage({
     ]);
   }, [organizationName, setBreadcrumbLinks]);
 
+  const handleNewAsset = useCallback(() => {
+    if (onNewAssetClick) onNewAssetClick();
+    else navigate('/assets/new');
+  }, [onNewAssetClick, navigate]);
+
+  // ── Derived chart data (real assets from Redux) ────────────────────────────
+  const visibleMovement = useMemo(() => {
+    if (movementRange === '7M') return movement.slice(-7);
+    if (movementRange === '1Y') return movement.slice(-12);
+    return movement;
+  }, [movement, movementRange]);
+
+  const categoryData = useMemo(() => countBy(assets, 'category', 'Uncategorized', 8), [assets]);
+  const departmentData = useMemo(() => countBy(assets, 'department', 'Unassigned dept', 8), [assets]);
+  const recentAssets = useMemo(() => assets.slice(0, 5), [assets]);
+
+  // ── Stat cards ─────────────────────────────────────────────────────────────
+  const dark = theme.palette.mode === 'dark';
+  const dashboardStats = useMemo(
+    () => [
+      {
+        label: 'Total assets',
+        icon: <Inventory2OutlinedIcon sx={{ fontSize: 16, color: dark ? '#818CF8' : '#5159D7' }} />,
+        iconBgColor: theme.palette.customColors.primaryTransparent,
+        isLoading: statsLoading,
+        ...statsData.total_assets,
+      },
+      {
+        label: 'Assigned',
+        icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 16, color: dark ? '#34D399' : '#20B46B' }} />,
+        iconBgColor: theme.palette.customColors.successTransparent,
+        isLoading: statsLoading,
+        ...statsData.assigned,
+      },
+      {
+        label: 'Available',
+        icon: <GroupsOutlinedIcon sx={{ fontSize: 16, color: dark ? '#38BDF8' : '#009BD8' }} />,
+        iconBgColor: theme.palette.customColors.infoTransparent,
+        isLoading: statsLoading,
+        ...statsData.available,
+      },
+      {
+        label: 'Under maintenance',
+        icon: <BuildOutlinedIcon sx={{ fontSize: 16, color: dark ? '#FBBF24' : '#EFA831' }} />,
+        iconBgColor: theme.palette.customColors.warningTransparent,
+        isLoading: statsLoading,
+        ...statsData.under_maintenance,
+      },
+      {
+        label: 'Warranty expiring',
+        icon: <WarningAmberOutlinedIcon sx={{ fontSize: 16, color: dark ? '#F87171' : '#E62C2C' }} />,
+        iconBgColor: theme.palette.customColors.errorTransparent,
+        isLoading: statsLoading,
+        ...statsData.warranty_expiring,
+      },
+      {
+        label: 'Retired YTD',
+        icon: <ArchiveOutlinedIcon sx={{ fontSize: 16, color: dark ? '#94A3B8' : '#321C00' }} />,
+        iconBgColor: theme.palette.customColors.bgNeutralTransparent1,
+        isLoading: statsLoading,
+        ...statsData.retired_ytd,
+      },
+    ],
+    [statsData, statsLoading, dark, theme.palette.customColors],
+  );
+
+  const quickActionsList = useMemo(
+    () => [
+      { id: 'add-asset', label: 'Add new asset', icon: <AddCircleOutlinedIcon fontSize="small" />, onClick: () => navigate('/assets/new') },
+      { id: 'assign', label: 'Assign to employee', icon: <AssignmentIndOutlinedIcon fontSize="small" />, onClick: () => navigate('/assign-asset') },
+      { id: 'maintenance', label: 'Schedule maintenance', icon: <BuildOutlinedIcon fontSize="small" />, onClick: () => navigate('/maintenance/schedule') },
+      { id: 'qr', label: 'Generate QR labels', icon: <QrCodeOutlinedIcon fontSize="small" />, onClick: () => navigate('/assets') },
+      { id: 'reports', label: 'Open reports', icon: <BarChartOutlinedIcon fontSize="small" />, onClick: () => navigate('/reports') },
+    ],
+    [navigate],
+  );
+
+  const outlineBtn = {
+    px: 2,
+    py: 0.75,
+    borderRadius: 2,
+    border: `1px solid ${theme.palette.customColors.borderLight}`,
+    bgcolor: 'transparent',
+    fontSize: '0.8125rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    color: 'text.primary',
+    '&:hover': { bgcolor: theme.palette.customColors.bgNeutral },
+  } as const;
+
   return (
-    <Box>
-      {/* ── Error Banner if Fetch Fails ──────────────────────────────────── */}
+    <Box sx={{ '@keyframes spin': { to: { transform: 'rotate(360deg)' } } }}>
       {error && (
         <Alert
           severity="warning"
           sx={{ mb: 2.5, borderRadius: 2 }}
-          action={
-            <Button color="inherit" size="small" onClick={handleRefresh}>
-              Retry
-            </Button>
-          }
+          action={<Button color="inherit" size="small" onClick={loadAll}>Retry</Button>}
         >
           {error}
         </Alert>
       )}
 
-      {/* ── Page Header ───────────────────────────────────────────────────── */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-          <Box>
-            <Box
-              component="h1"
-              sx={{
-                m: 0,
-                fontFamily: '"Manrope", sans-serif',
-                fontWeight: 700,
-                fontSize: '1.75rem',
-                color: 'text.primary',
-                lineHeight: 1.3,
-              }}
-            >
-              {greeting}, {userName}
-            </Box>
-            <Box
-              component="p"
-              sx={{
-                m: 0,
-                mt: 0.5,
-                fontSize: '0.9375rem',
-                color: theme.palette.primary.main,
-                fontWeight: 400,
-              }}
-            >
-              {`Here's what's happening across ${organizationName} today.`}
-            </Box>
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box>
+          <Box
+            component="h1"
+            sx={{ m: 0, fontFamily: '"Manrope", sans-serif', fontWeight: 700, fontSize: '1.75rem', color: 'text.primary', lineHeight: 1.3 }}
+          >
+            {greeting}, {userName}
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Box
-              component="button"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              title="Refresh dashboard stats"
-              sx={{
-                p: 0.75,
-                px: 1.25,
-                borderRadius: 2,
-                border: `1px solid ${theme.palette.customColors.borderLight}`,
-                bgcolor: 'transparent',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                cursor: isLoading ? 'default' : 'pointer',
-                color: 'text.primary',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                opacity: isLoading ? 0.6 : 1,
-                '&:hover': { bgcolor: isLoading ? 'transparent' : theme.palette.customColors.bgNeutral },
-              }}
-            >
-              <RefreshOutlinedIcon sx={{ fontSize: 18, animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
-              Refresh
-            </Box>
-            <Box
-              component="button"
-              onClick={() => navigate('/reports')}
-              sx={{
-                px: 2,
-                py: 0.75,
-                borderRadius: 2,
-                border: `1px solid ${theme.palette.customColors.borderLight}`,
-                bgcolor: 'transparent',
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                color: 'text.primary',
-                '&:hover': { bgcolor: theme.palette.customColors.bgNeutral },
-              }}
-            >
-              View reports
-            </Box>
-            <Box
-              component="button"
-              onClick={handleNewAsset}
-              sx={{
-                px: 2,
-                py: 0.75,
-                borderRadius: 2,
-                border: 'none',
-                bgcolor: theme.palette.primary.main,
-                fontSize: '0.8125rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                '&:hover': { bgcolor: theme.palette.primary.dark },
-              }}
-            >
-              + New asset
-            </Box>
+          <Box component="p" sx={{ m: 0, mt: 0.5, fontSize: '0.9375rem', color: theme.palette.primary.main }}>
+            {`Here's what's happening across ${organizationName} today.`}
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box
+            component="button"
+            onClick={loadAll}
+            disabled={isLoading}
+            title="Refresh dashboard"
+            sx={{ ...outlineBtn, px: 1.25, display: 'flex', alignItems: 'center', gap: 0.5, opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'default' : 'pointer' }}
+          >
+            <RefreshOutlinedIcon sx={{ fontSize: 18, animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
+            Refresh
+          </Box>
+          <Box component="button" onClick={() => navigate('/reports')} sx={outlineBtn}>
+            View reports
+          </Box>
+          <Box
+            component="button"
+            onClick={handleNewAsset}
+            sx={{ px: 2, py: 0.75, borderRadius: 2, border: 'none', bgcolor: theme.palette.primary.main, fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer', color: '#fff', '&:hover': { bgcolor: theme.palette.primary.dark } }}
+          >
+            + New asset
           </Box>
         </Box>
       </Box>
 
-      {/* ── Stat Cards Grid ───────────────────────────────────────────────── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: 2,
-          mb: 3,
-        }}
-      >
+      {/* ── Stat cards ─────────────────────────────────────────────────────── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2, mb: 3 }}>
         {dashboardStats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </Box>
 
-      {/* ── Bottom Section: Analytics & Quick Actions ──────────────────────── */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 2.5 }}>
-        {/* Asset Movement Chart Card */}
-        <Box
-          sx={{
-            borderRadius: 2.5,
-            border: `1px solid ${theme.palette.customColors.borderLight}`,
-            bgcolor: theme.palette.customColors.white,
-            p: 2.5,
-            minHeight: 280,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-            <Box>
-              <Box sx={{ fontFamily: '"Manrope", sans-serif', fontWeight: 600, fontSize: '0.9375rem' }}>
-                Asset movement
-              </Box>
-              <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.25 }}>
-                Added vs retired overview
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              {['7M', '1Y', 'All'].map((t) => (
-                <Box
-                  key={t}
-                  component="button"
-                  sx={{
-                    px: 1.25,
-                    py: 0.25,
-                    borderRadius: 1,
-                    border: 'none',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    bgcolor: t === '7M' ? theme.palette.primary.main : 'transparent',
-                    color: t === '7M' ? '#fff' : 'text.secondary',
-                    '&:hover': {
-                      bgcolor: t === '7M' ? theme.palette.primary.main : theme.palette.customColors.bgNeutral,
-                    },
-                  }}
-                >
-                  {t}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-          {/* Chart area */}
-          <Box
-            sx={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mt: 2,
-              bgcolor: theme.palette.customColors.bgLight,
-              borderRadius: 2,
-            }}
-          >
-            <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
-              <Box sx={{ fontSize: '2rem', mb: 0.5 }}>📈</Box>
-              <Box sx={{ fontSize: '0.8125rem', fontWeight: 500 }}>
-                {statsData.total_assets.value} total assets tracked
-              </Box>
-              <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}>
-                {statsData.assigned.value} assigned &bull; {statsData.available.value} available &bull; {statsData.under_maintenance.value} maintenance
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+      {/* ── Movement + category distribution ───────────────────────────────── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 2.5, mb: 2.5 }}>
+        <AssetMovementChart
+          data={visibleMovement}
+          range={movementRange}
+          onRangeChange={(r: MovementRange) => dispatch(movementRangeChanged(r))}
+          loading={analyticsLoading}
+        />
+        <CategoryDonut data={categoryData} loading={assetsLoading} />
+      </Box>
 
-        {/* Quick Actions Component */}
+      {/* ── Department bars + quick actions ────────────────────────────────── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 2.5, mb: 2.5 }}>
+        <DepartmentBars data={departmentData} loading={assetsLoading} onDetails={() => navigate('/departments')} />
         <QuickActions actions={quickActionsList} />
       </Box>
+
+      {/* ── Recent activity ────────────────────────────────────────────────── */}
+      <Box sx={{ mb: 2.5 }}>
+        <RecentActivity items={activity} loading={analyticsLoading} />
+      </Box>
+
+      {/* ── Recently added assets ──────────────────────────────────────────── */}
+      <RecentAssetsTable assets={recentAssets} loading={assetsLoading} onViewAll={() => navigate('/assets')} />
     </Box>
   );
 }
