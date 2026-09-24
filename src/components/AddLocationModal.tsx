@@ -247,7 +247,7 @@ export default function AddLocationModal({ open, onClose, onAdd, isSaving }: Add
               />
             </Box>
             <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', mt: 1 }}>
-              You can add or adjust these later — starting at 0 is fine.
+              You can add or adjust these later — starting at nothing is fine.
             </Typography>
           </Box>
         </DialogContent>
