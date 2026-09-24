@@ -76,7 +76,7 @@ export default function EditLocationModal({
       setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
     };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement | HTMLDivElement>) => {
     e.preventDefault();
     if (!canSave) return;
     onSave({

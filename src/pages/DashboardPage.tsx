@@ -51,7 +51,7 @@ export interface DashboardPageProps {
 }
 
 // Group assets by a string field → sorted [{name, value}] (largest first).
-function countBy(items: { [k: string]: unknown }[], field: string, fallback: string, limit?: number): CountDatum[] {
+function countBy<T extends Record<string, any>>(items: T[], field: keyof T, fallback: string, limit?: number): CountDatum[] {
   const map = new Map<string, number>();
   for (const item of items) {
     const key = (item[field] as string | null | undefined)?.trim() || fallback;
