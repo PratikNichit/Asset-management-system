@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
+import Skeleton from '@mui/material/Skeleton';
 import { useTheme } from '@mui/material/styles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -33,6 +34,8 @@ export interface StatCardProps {
   trendLabel?: string;
   /** Optional secondary note shown below the value, e.g. "next 90 days". */
   note?: string;
+  /** Whether the card is in a loading state. */
+  isLoading?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -63,6 +66,7 @@ export default function StatCard({
   trendDirection = 'up',
   trendLabel,
   note,
+  isLoading = false,
 }: StatCardProps) {
   const theme = useTheme();
 
@@ -123,28 +127,36 @@ export default function StatCard({
       </Box>
 
       {/* ── Value ─────────────────────────────────────────────────────────── */}
-      <Typography
-        variant="h5"
-        sx={{
-          fontFamily: '"Manrope", sans-serif',
-          fontWeight: 700,
-          fontSize: '1.875rem',
-          lineHeight: 1,
-          color: 'text.primary',
-        }}
-      >
-        {value}
-      </Typography>
-
-      {/* ── Note (e.g. "next 90 days") ────────────────────────────────────── */}
-      {note && (
-        <Typography variant="caption" sx={{ fontSize: '0.775rem', color: 'text.secondary' }}>
-          {note}
+      {isLoading ? (
+        <Skeleton variant="text" width="60%" height={38} sx={{ borderRadius: 1 }} />
+      ) : (
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: '"Manrope", sans-serif',
+            fontWeight: 700,
+            fontSize: '1.875rem',
+            lineHeight: 1,
+            color: 'text.primary',
+          }}
+        >
+          {value}
         </Typography>
       )}
 
+      {/* ── Note (e.g. "next 90 days") ────────────────────────────────────── */}
+      {isLoading ? (
+        <Skeleton variant="text" width="45%" height={16} sx={{ borderRadius: 0.5 }} />
+      ) : (
+        note && (
+          <Typography variant="caption" sx={{ fontSize: '0.775rem', color: 'text.secondary' }}>
+            {note}
+          </Typography>
+        )
+      )}
+
       {/* ── Trend badge ───────────────────────────────────────────────────── */}
-      {trendValue && (
+      {!isLoading && trendValue && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
           <Box
             sx={{

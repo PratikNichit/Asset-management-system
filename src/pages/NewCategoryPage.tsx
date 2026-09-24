@@ -10,10 +10,16 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 
 import { useAppDispatch } from '../app/hooks';
-import { addCategory } from '../redux/categoriesSlice';
+import { addCategoryAsync } from '../redux/categoriesSlice';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { AssetCategoryItem, CategoryIconType } from '../types/category';
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 export interface NewCategoryPageProps {
   organizationName?: string;
@@ -59,22 +65,24 @@ export default function NewCategoryPage({
 
   // UI state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Categories', navId: 'categories' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Categories', path: '/categories' },
       { label: 'New Category' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!categoryName.trim()) {
       setToastMessage('Please enter a category name.');
       return;
     }
 
+    setIsSubmitting(true);
     const selectedSwatch = COLOR_SWATCHES[selectedColorIndex];
 
     const newCat: Omit<AssetCategoryItem, 'id'> = {
@@ -91,13 +99,19 @@ export default function NewCategoryPage({
       requiresCalibration: requiresCalibration === 'Yes',
     };
 
-    dispatch(addCategory(newCat));
-    setToastMessage(`Category "${categoryName.trim()}" created successfully.`);
+    try {
+      await dispatch(addCategoryAsync(newCat)).unwrap();
+      setToastMessage(`Category "${categoryName.trim()}" created successfully.`);
 
-    if (onSuccess) {
-      onSuccess();
-    } else if (onCancel) {
-      onCancel();
+      if (onSuccess) {
+        onSuccess();
+      } else if (onCancel) {
+        onCancel();
+      }
+    } catch (err) {
+      setToastMessage('Failed to create category. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -113,39 +127,41 @@ export default function NewCategoryPage({
           gap: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
-          >
-            New category
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
-            Classify assets and set defaults for depreciation and servicing.
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           {onCancel && (
             <AppButton
               variant="outline"
-              size="sm"
-              startIcon={<ArrowBackIcon />}
+              size="icon"
               onClick={onCancel}
-              sx={{ borderColor: 'customColors.borderLight', color: 'text.primary', bgcolor: 'background.paper' }}
+              aria-label="Back to categories"
+              sx={outlineButtonSx}
             >
-              Cancel
+              <ArrowBackIcon fontSize="small" />
             </AppButton>
           )}
-          <AppButton
-            variant="default"
-            size="sm"
-            startIcon={<CategoryOutlinedIcon />}
-            onClick={() => handleSubmit()}
-          >
-            Create category
-          </AppButton>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 800, fontFamily: '"Manrope", sans-serif', fontSize: '1.75rem' }}
+            >
+              New category
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
+              Classify assets and set defaults for depreciation and servicing.
+            </Typography>
+          </Box>
         </Box>
+
+        <AppButton
+          variant="default"
+          size="sm"
+          startIcon={<CategoryOutlinedIcon />}
+          onClick={() => handleSubmit()}
+          loading={isSubmitting}
+        >
+          Create category
+        </AppButton>
       </Box>
 
       {/* ── Main Form Cards Stack ────────────────────────────────────────────── */}

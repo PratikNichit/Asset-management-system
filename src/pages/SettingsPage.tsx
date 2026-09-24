@@ -35,8 +35,8 @@ export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPag
   useEffect(() => {
     const tabLabel = SETTINGS_TABS.find((t) => t.id === activeTab)?.label || 'Workspace';
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Settings', navId: 'settings' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Settings', path: '/settings' },
       { label: tabLabel },
     ]);
   }, [activeTab, organizationName, setBreadcrumbLinks]);

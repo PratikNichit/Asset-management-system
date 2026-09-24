@@ -9,9 +9,11 @@ import locationsReducer from '../redux/locationsSlice';
 import themeReducer from '../redux/themeSlice';
 import assetsReducer from '../redux/assetsSlice';
 import dashboardReducer from '../redux/dashboardSlice';
+import authReducer from '../redux/authSlice';
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     users: usersReducer,
     assignAsset: assignAssetReducer,
     maintenance: maintenanceReducer,

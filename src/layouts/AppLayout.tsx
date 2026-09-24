@@ -1,46 +1,44 @@
 import type { ReactNode } from 'react';
+import { useNavigate, Outlet } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import AppSidebar from '../components/AppSidebar';
 import AppTopBar from '../components/AppTopBar';
 import { useLayout } from '../hooks/useLayout';
 
 export interface AppLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
   onNewAssetClick?: () => void;
 }
 
 /**
  * AppLayout — Main application layout shell.
  *
- * Combines AppSidebar, AppTopBar, and a main scrollable content area,
- * consuming LayoutContext for navigation and breadcrumbs state.
+ * Combines AppSidebar, AppTopBar, and a main scrollable content area.
+ * Renders nested routes via <Outlet /> or explicitly passed children.
  */
 export default function AppLayout({ children, onNewAssetClick }: AppLayoutProps) {
-  const { activeItem, setActiveItem, breadcrumbs, breadcrumbLinks } = useLayout();
+  const navigate = useNavigate();
+  const { breadcrumbs, breadcrumbLinks } = useLayout();
 
   const handleNewAsset = () => {
     if (onNewAssetClick) {
       onNewAssetClick();
     } else {
-      alert('New asset action triggered');
+      navigate('/assets/new');
     }
   };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
       {/* ── Collapsible Left Sidebar ────────────────────────────────────────── */}
-      <AppSidebar
-        activeItem={activeItem}
-        onNavChange={(id) => setActiveItem(id)}
-      />
+      <AppSidebar />
 
       {/* ── Main Content Area ──────────────────────────────────────────────── */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top Header Bar */}
         <AppTopBar
           breadcrumbs={breadcrumbs}
-          breadcrumbNavIds={breadcrumbLinks.map((c) => c.navId)}
-          onBreadcrumbClick={(navId) => setActiveItem(navId)}
+          breadcrumbPaths={breadcrumbLinks.map((c) => c.path)}
           onNewAsset={handleNewAsset}
         />
 
@@ -53,7 +51,7 @@ export default function AppLayout({ children, onNewAssetClick }: AppLayoutProps)
             p: 4,
           }}
         >
-          {children}
+          {children ?? <Outlet />}
         </Box>
       </Box>
     </Box>

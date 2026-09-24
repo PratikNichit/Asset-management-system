@@ -3,6 +3,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
@@ -12,8 +14,9 @@ import {
   selectAllEmployeesList,
   selectSelectedEmployeeId,
   setSelectedEmployeeId,
-  addEmployee,
+  addEmployeeAsync,
   updateEmployee,
+  deleteEmployeeAsync,
 } from '../redux/employeesSlice';
 import { selectAllAssets } from '../redux/assignAssetSlice';
 import { useLayout } from '../hooks/useLayout';
@@ -24,6 +27,7 @@ import AddEmployeeModal from '../components/AddEmployeeModal';
 import EditEmployeeModal from '../components/EditEmployeeModal';
 import ImportCSVModal from '../components/ImportCSVModal';
 import AssignAssetModal from '../components/AssignAssetModal';
+import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog';
 import AddEmployeePage from './AddEmployeePage';
 import type { Employee } from '../types/employee';
 import type { Asset } from '../types/asset';
@@ -50,6 +54,11 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [localAssets, setLocalAssets] = useState<Asset[]>(assets);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>(
+    { open: false, message: '', severity: 'success' }
+  );
 
   // Synchronize localAssets when Redux assets change
   useEffect(() => {
@@ -96,13 +105,13 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
   useEffect(() => {
     if (selectedEmployee) {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
-        { label: 'Employees', navId: 'employees' },
+        { label: organizationName, path: '/dashboard' },
+        { label: 'Employees', path: '/employees' },
         { label: selectedEmployee.name },
       ]);
     } else {
       setBreadcrumbLinks([
-        { label: organizationName, navId: 'dashboard' },
+        { label: organizationName, path: '/dashboard' },
         { label: 'Employees' },
       ]);
     }
@@ -117,8 +126,12 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
     dispatch(setSelectedEmployeeId(null));
   };
 
-  const handleAddEmployee = (newEmp: Omit<Employee, 'id'>) => {
-    dispatch(addEmployee(newEmp));
+  const handleAddEmployee = async (newEmp: Omit<Employee, 'id'>) => {
+    try {
+      await dispatch(addEmployeeAsync(newEmp)).unwrap();
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to add employee', severity: 'error' });
+    }
   };
 
   const handleOpenEditModal = (emp: Employee) => {
@@ -141,6 +154,22 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
         a.id === assetId ? { ...a, assignedTo: employeeName, status: 'In Use' as const } : a
       )
     );
+  };
+
+  const handleDeleteEmployee = (emp: Employee) => setDeletingEmployee(emp);
+
+  const handleConfirmDelete = async () => {
+    if (!deletingEmployee) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteEmployeeAsync(deletingEmployee.id)).unwrap();
+      setDeletingEmployee(null);
+      setSnackbar({ open: true, message: `"${deletingEmployee.name}" deleted`, severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to delete employee', severity: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Available (unassigned) assets for modal
@@ -171,6 +200,7 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
           onBack={handleBackToList}
           onEditProfile={handleOpenEditModal}
           onAssignAsset={handleOpenAssignModal}
+          onDelete={handleDeleteEmployee}
         />
 
         {/* Modals */}
@@ -188,6 +218,23 @@ export default function EmployeesPage({ organizationName = 'Atlas' }: EmployeesP
           onClose={() => setIsAssignModalOpen(false)}
           onConfirmAssign={handleConfirmAssignAsset}
         />
+
+        <ConfirmDeleteDialog
+          open={Boolean(deletingEmployee)}
+          entityName={deletingEmployee?.name}
+          onClose={() => setDeletingEmployee(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3500}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity={snackbar.severity} sx={{ borderRadius: 2 }}>{snackbar.message}</Alert>
+        </Snackbar>
       </Box>
     );
   }

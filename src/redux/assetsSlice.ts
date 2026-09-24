@@ -1,9 +1,10 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Asset } from '../types/asset';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_ASSETS: Asset[] = [
+export const MOCK_ASSETS: Asset[] = [
   {
     id: 'AST-00184',
     name: 'MacBook Pro 16" M3',
@@ -152,11 +153,145 @@ const MOCK_ASSETS: Asset[] = [
 
 interface AssetsState {
   items: Asset[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: AssetsState = {
   items: MOCK_ASSETS,
+  isLoading: false,
+  error: null,
 };
+
+export const getNextAssetId = (assets: Asset[]): string => {
+  if (!assets || assets.length === 0) return 'AST-00001';
+  let maxNum = 0;
+  for (const asset of assets) {
+    if (!asset || !asset.id) continue;
+    const match = asset.id.match(/\d+/g);
+    if (match) {
+      const num = parseInt(match[match.length - 1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  const nextNum = maxNum > 0 ? maxNum + 1 : assets.length + 1;
+  return `AST-${String(nextNum).padStart(5, '0')}`;
+};
+
+// ─── Async Thunks for Supabase ────────────────────────────────────────────────
+
+export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('v_assets').select('*');
+      if (error) throw error;
+      if (data) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          category: row.category,
+          categoryId: row.category_id,
+          serial: row.serial,
+          department: row.department,
+          departmentId: row.department_id,
+          location: row.location,
+          locationId: row.location_id,
+          assignedTo: row.assigned_to,
+          assignedToId: row.assigned_to_id,
+          warrantyExpiry: row.warranty_expiry,
+          status: row.status,
+        })) as Asset[];
+      }
+    }
+    return MOCK_ASSETS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (newAsset: Asset, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const databaseStatus = {
+        Available: 'Available',
+        'In Use': 'Assigned',
+        Maintenance: 'In Maintenance',
+        'Under Maintenance': 'In Maintenance',
+        Retired: 'Retired',
+        Disposed: 'Lost',
+      }[newAsset.status];
+
+      const { error } = await supabase.from('assets').insert([
+        {
+          id: newAsset.id,
+          name: newAsset.name,
+          code: newAsset.code,
+          category_id: newAsset.categoryId,
+          serial: newAsset.serial,
+          department_id: newAsset.departmentId,
+          location_id: newAsset.locationId,
+          warranty_expiry: newAsset.warrantyExpiry,
+          status: databaseStatus ?? 'Available',
+        },
+      ]);
+      if (error) throw error;
+
+      if (newAsset.assignedToId && newAsset.assignedToId !== 'Unassigned') {
+        const { error: assignError } = await supabase.from('asset_assignments').insert([{
+          asset_id: newAsset.id,
+          employee_id: newAsset.assignedToId,
+          assigned_date: new Date().toISOString().split('T')[0],
+          notes: 'Assigned upon creation'
+        }]);
+        if (assignError) throw assignError;
+      }
+    }
+    return newAsset;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const updateAssetAsync = createAsyncThunk('assets/updateAssetAsync', async (asset: Asset, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const updatePayload: Record<string, any> = {
+        name: asset.name,
+        code: asset.code,
+        serial: asset.serial,
+        warranty_expiry: asset.warrantyExpiry,
+      };
+      
+      if (asset.categoryId) updatePayload.category_id = asset.categoryId;
+      if (asset.departmentId) updatePayload.department_id = asset.departmentId;
+      if (asset.locationId) updatePayload.location_id = asset.locationId;
+      if (asset.status === 'Retired' || asset.status === 'Disposed') updatePayload.status = asset.status;
+      
+      const { error } = await supabase.from('assets').update(updatePayload).eq('id', asset.id);
+      if (error) throw error;
+    }
+    return asset;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteAssetAsync = createAsyncThunk('assets/deleteAssetAsync', async (assetId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('assets').delete().eq('id', assetId);
+      if (error) throw error;
+    }
+    return assetId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+// ─── Slice ────────────────────────────────────────────────────────────────────
 
 export const assetsSlice = createSlice({
   name: 'assets',
@@ -166,24 +301,52 @@ export const assetsSlice = createSlice({
       state.items.unshift(action.payload);
     },
     updateAsset: (state, action: PayloadAction<Asset>) => {
-      const index = state.items.findIndex(a => a.id === action.payload.id);
+      const index = state.items.findIndex((a) => a.id === action.payload.id);
       if (index !== -1) {
         state.items[index] = action.payload;
       }
     },
     removeAsset: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(a => a.id !== action.payload);
+      state.items = state.items.filter((a) => a.id !== action.payload);
     },
     setAssets: (state, action: PayloadAction<Asset[]>) => {
       state.items = action.payload;
-    }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchAssets.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssets.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchAssets.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch assets';
+      })
+      .addCase(addAssetAsync.fulfilled, (state, action) => {
+        const exists = state.items.some((a) => a.id === action.payload.id);
+        if (!exists) {
+          state.items.unshift(action.payload);
+        }
+      })
+      .addCase(updateAssetAsync.fulfilled, (state, action) => {
+        const index = state.items.findIndex((a) => a.id === action.payload.id);
+        if (index !== -1) state.items[index] = action.payload;
+      })
+      .addCase(deleteAssetAsync.fulfilled, (state, action) => {
+        state.items = state.items.filter((a) => a.id !== action.payload);
+      });
   },
 });
 
 export const { addAsset, updateAsset, removeAsset, setAssets } = assetsSlice.actions;
 
 export const selectAllAssets = (state: { assets: AssetsState }) => state.assets.items;
-export const selectAssetById = (state: { assets: AssetsState }, assetId: string) => 
-  state.assets.items.find(a => a.id === assetId || a.code === assetId) || null;
+export const selectAssetById = (state: { assets: AssetsState }, assetId: string) =>
+  state.assets.items.find((a) => a.id === assetId || a.code === assetId) || null;
 
 export default assetsSlice.reducer;

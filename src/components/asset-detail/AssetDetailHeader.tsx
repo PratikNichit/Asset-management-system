@@ -11,9 +11,10 @@ interface AssetDetailHeaderProps {
   asset: Asset;
   onBack: () => void;
   onEdit?: (asset: Asset) => void;
+  onDelete?: (asset: Asset) => void;
 }
 
-export default function AssetDetailHeader({ asset, onBack, onEdit }: AssetDetailHeaderProps) {
+export default function AssetDetailHeader({ asset, onBack, onEdit, onDelete }: AssetDetailHeaderProps) {
   return (
     <Box
       sx={{
@@ -39,7 +40,7 @@ export default function AssetDetailHeader({ asset, onBack, onEdit }: AssetDetail
             mt: 0.25,
           }}
         >
-          {asset.code} · {asset.category} · Apple A2991
+          {asset.code} · {asset.category}
         </Typography>
       </Box>
 
@@ -74,7 +75,8 @@ export default function AssetDetailHeader({ asset, onBack, onEdit }: AssetDetail
         <AppButton
           variant="outline"
           size="icon"
-          sx={{ borderColor: 'customColors.borderLight', color: 'error.main', bgcolor: 'background.paper' }}
+          onClick={() => onDelete?.(asset)}
+          sx={{ borderColor: 'rgba(239,68,68,0.4)', color: 'error.main', bgcolor: 'background.paper', '&:hover': { bgcolor: 'rgba(239,68,68,0.06)', borderColor: 'error.main' } }}
         >
           <DeleteOutlinedIcon fontSize="small" />
         </AppButton>

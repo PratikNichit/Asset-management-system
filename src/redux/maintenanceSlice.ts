@@ -1,5 +1,6 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // ─── Domain Types ─────────────────────────────────────────────────────────────
 
@@ -42,9 +43,22 @@ export interface WorkOrder {
   status: WorkOrderStatus;
 }
 
+const WORK_ORDER_TYPE_ALIASES: Record<string, WorkOrderType> = {
+  Repair: 'Repair',
+  'Corrective Repair': 'Repair',
+  Preventive: 'Preventive',
+  'Preventive Maintenance': 'Preventive',
+  Calibration: 'Calibration',
+  Inspection: 'Inspection',
+};
+
+function normalizeWorkOrderType(value: unknown): WorkOrderType {
+  return WORK_ORDER_TYPE_ALIASES[String(value)] ?? 'Inspection';
+}
+
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_WORK_ORDERS: WorkOrder[] = [
+export const MOCK_WORK_ORDERS: WorkOrder[] = [
   {
     id: 'WO-001',
     assetName: 'Haitian MA1200 Press',
@@ -151,6 +165,8 @@ interface MaintenanceState {
   statusFilter: WorkOrderStatus | 'All';
   searchQuery: string;
   scheduleWorkForm: ScheduleWorkFormState;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: MaintenanceState = {
@@ -159,7 +175,66 @@ const initialState: MaintenanceState = {
   statusFilter: 'All',
   searchQuery: '',
   scheduleWorkForm: INITIAL_SCHEDULE_FORM,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchWorkOrders = createAsyncThunk('maintenance/fetchWorkOrders', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('v_work_orders').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          assetName: row.asset_name,
+          assetCode: row.asset_code,
+          type: normalizeWorkOrderType(row.type),
+          date: row.date,
+          technicianId: row.technician_id,
+          technicianName: row.technician_name,
+          technicianAvatar: row.technician_avatar,
+          technicianAvatarColor: row.technician_avatar_color,
+          costUsd: Number(row.cost_usd),
+          status: row.status as WorkOrderStatus,
+        })) as WorkOrder[];
+      }
+    }
+    return MOCK_WORK_ORDERS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const updateWorkOrderAsync = createAsyncThunk('maintenance/updateWorkOrderAsync', async (wo: Partial<WorkOrder> & { id: string }, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const updatePayload: Record<string, unknown> = {};
+      if (wo.status !== undefined) updatePayload.status = wo.status;
+      if (wo.costUsd !== undefined) updatePayload.cost_usd = wo.costUsd;
+      if (wo.date !== undefined) updatePayload.date = wo.date;
+      const { error } = await supabase.from('work_orders').update(updatePayload).eq('id', wo.id);
+      if (error) throw error;
+    }
+    return wo;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteWorkOrderAsync = createAsyncThunk('maintenance/deleteWorkOrderAsync', async (woId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('work_orders').delete().eq('id', woId);
+      if (error) throw error;
+    }
+    return woId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
@@ -191,7 +266,7 @@ const maintenanceSlice = createSlice({
       const form = state.scheduleWorkForm;
       const newOrder: WorkOrder = {
         id: `WO-${String(state.workOrders.length + 1).padStart(3, '0')}`,
-        assetName: form.assetId,  // resolved to name in the selector
+        assetName: form.assetId,
         assetCode: form.assetId,
         type: form.type,
         date: form.scheduledDate,
@@ -204,7 +279,50 @@ const maintenanceSlice = createSlice({
       };
       state.workOrders.unshift(newOrder);
       state.scheduleWorkForm = { ...INITIAL_SCHEDULE_FORM, isSuccess: true };
+
+      if (isSupabaseConfigured()) {
+        supabase.from('work_orders').insert([{
+          id: newOrder.id,
+          asset_id: form.assetId,
+          type: newOrder.type,
+          date: newOrder.date,
+          technician_id: form.technicianId,
+          cost_usd: newOrder.costUsd,
+          status: newOrder.status,
+          notes: form.description,
+        }]).then();
+      }
     },
+    updateWorkOrder(state, action: PayloadAction<{ id: string; changes: Partial<WorkOrder> }>) {
+      const index = state.workOrders.findIndex((wo) => wo.id === action.payload.id);
+      if (index !== -1) {
+        state.workOrders[index] = { ...state.workOrders[index], ...action.payload.changes };
+      }
+    },
+    deleteWorkOrder(state, action: PayloadAction<string>) {
+      state.workOrders = state.workOrders.filter((wo) => wo.id !== action.payload);
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchWorkOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchWorkOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.workOrders = action.payload;
+      })
+      .addCase(fetchWorkOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch work orders';
+      })
+      .addCase(updateWorkOrderAsync.fulfilled, (state, action) => {
+        const index = state.workOrders.findIndex((wo) => wo.id === action.payload.id);
+        if (index !== -1) state.workOrders[index] = { ...state.workOrders[index], ...action.payload };
+      })
+      .addCase(deleteWorkOrderAsync.fulfilled, (state, action) => {
+        state.workOrders = state.workOrders.filter((wo) => wo.id !== action.payload);
+      });
   },
 });
 
@@ -215,6 +333,8 @@ export const {
   scheduleFormFieldChanged,
   scheduleFormReset,
   scheduleFormSubmitted,
+  updateWorkOrder,
+  deleteWorkOrder,
 } = maintenanceSlice.actions;
 
 // ─── Selectors ────────────────────────────────────────────────────────────────

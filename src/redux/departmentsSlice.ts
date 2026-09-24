@@ -1,6 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../app/store';
 import type { Department } from '../types/department';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const INITIAL_DEPARTMENTS: Department[] = [
   {
@@ -62,12 +63,106 @@ export const INITIAL_DEPARTMENTS: Department[] = [
 interface DepartmentsState {
   list: Department[];
   selectedDepartmentId: string | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: DepartmentsState = {
   list: INITIAL_DEPARTMENTS,
   selectedDepartmentId: null,
+  isLoading: false,
+  error: null,
 };
+
+// ─── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchDepartments = createAsyncThunk('departments/fetchDepartments', async (_, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from('v_departments').select('*');
+      if (error) throw error;
+      if (data) {
+        return data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          head: row.head,
+          headId: row.head_id,
+          locationId: row.location_id,
+          membersCount: row.headcount ?? 0,
+          assetsCount: row.asset_count ?? 0,
+          badgeBg: row.badge_bg,
+        })) as Department[];
+      }
+    }
+    return INITIAL_DEPARTMENTS;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const addDepartmentAsync = createAsyncThunk('departments/addDepartmentAsync', async (newDept: Omit<Department, 'id'>, { getState, rejectWithValue }) => {
+  try {
+    const state = getState() as RootState;
+    const nextNum = state.departments.list.length + 1;
+    const id = `DEP-${String(nextNum).padStart(3, '0')}`;
+    
+    const badges = [
+      'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+      'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)',
+      'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
+    ];
+    const badgeBg = newDept.badgeBg || badges[Math.floor(Math.random() * badges.length)];
+    const deptToAdd = { id, badgeBg, ...newDept };
+
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('departments').insert([{
+        id: deptToAdd.id,
+        name: deptToAdd.name,
+        code: deptToAdd.code,
+        head_id: deptToAdd.headId,
+        location_id: deptToAdd.locationId,
+        badge_bg: deptToAdd.badgeBg,
+      }]);
+      if (error) throw error;
+    }
+    return deptToAdd;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const updateDepartmentAsync = createAsyncThunk('departments/updateDepartmentAsync', async (dept: Department, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const updatePayload: Record<string, any> = {
+        name: dept.name,
+        code: dept.code,
+        badge_bg: dept.badgeBg,
+      };
+      if (dept.headId) updatePayload.head_id = dept.headId;
+      if (dept.locationId) updatePayload.location_id = dept.locationId;
+      
+      const { error } = await supabase.from('departments').update(updatePayload).eq('id', dept.id);
+      if (error) throw error;
+    }
+    return dept;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
+
+export const deleteDepartmentAsync = createAsyncThunk('departments/deleteDepartmentAsync', async (deptId: string, { rejectWithValue }) => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('departments').delete().eq('id', deptId);
+      if (error) throw error;
+    }
+    return deptId;
+  } catch (err) {
+    return rejectWithValue((err as Error).message);
+  }
+});
 
 const departmentsSlice = createSlice({
   name: 'departments',
@@ -85,11 +180,20 @@ const departmentsSlice = createSlice({
         'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
       ];
       const badgeBg = action.payload.badgeBg || badges[Math.floor(Math.random() * badges.length)];
-      state.list.push({
-        id,
-        badgeBg,
-        ...action.payload,
-      });
+      const newDep = { id, badgeBg, ...action.payload };
+      state.list.push(newDep);
+
+      if (isSupabaseConfigured()) {
+        supabase.from('departments').insert([{
+          id: newDep.id,
+          name: newDep.name,
+          code: newDep.code,
+          head: newDep.head,
+          headcount: newDep.membersCount,
+          asset_count: newDep.assetsCount,
+          badge_bg: newDep.badgeBg,
+        }]).then();
+      }
     },
     updateDepartment(state, action: PayloadAction<Department>) {
       const index = state.list.findIndex((d) => d.id === action.payload.id);
@@ -103,6 +207,30 @@ const departmentsSlice = createSlice({
     setSelectedDepartmentId(state, action: PayloadAction<string | null>) {
       state.selectedDepartmentId = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchDepartments.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchDepartments.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchDepartments.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? 'Failed to fetch departments';
+      })
+      .addCase(updateDepartmentAsync.fulfilled, (state, action) => {
+        const index = state.list.findIndex((d) => d.id === action.payload.id);
+        if (index !== -1) state.list[index] = action.payload;
+      })
+      .addCase(deleteDepartmentAsync.fulfilled, (state, action) => {
+        state.list = state.list.filter((d) => d.id !== action.payload);
+      })
+      .addCase(addDepartmentAsync.fulfilled, (state, action) => {
+        state.list.push(action.payload);
+      });
   },
 });
 

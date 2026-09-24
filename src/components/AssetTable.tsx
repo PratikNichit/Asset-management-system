@@ -91,9 +91,6 @@ export interface AssetTableProps {
    */
   searchPlaceholder?: string;
 
-  /** Called when the set of selected asset IDs changes. */
-  onSelectionChange?: (selectedIds: Set<string>) => void;
-
   /**
    * Called when the user clicks a row.
    * When provided, rows get a `pointer` cursor.
@@ -106,8 +103,8 @@ export interface AssetTableProps {
 /**
  * AssetTable — a column-driven, self-contained asset inventory table.
  *
- * The component owns: category tabs (auto-derived from data), search,
- * and row selection. It knows nothing about column names or cell content
+ * The component owns: category tabs (auto-derived from data) and search.
+ * It knows nothing about column names or cell content
  * — those come entirely from the `columns` prop.
  *
  * @example
@@ -134,7 +131,6 @@ export default function AssetTable({
   columns = DEFAULT_ASSET_COLUMNS,
   searchFields = ['name', 'code', 'serial'],
   searchPlaceholder = 'Search…',
-  onSelectionChange,
   onRowClick,
 }: AssetTableProps) {
   const theme = useTheme();
@@ -142,7 +138,6 @@ export default function AssetTable({
   // ── Local UI state ──────────────────────────────────────────────────────────
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // ── Category tabs — derived entirely from the data ─────────────────────────
 
@@ -173,13 +168,6 @@ export default function AssetTable({
     });
   }, [assets, activeCategory, search, searchFields]);
 
-  // ── Selection ────────────────────────────────────────────────────────────────
-
-  function handleCategoryChange(value: string) {
-    setActiveCategory(value);
-    setSelected(new Set());
-  }
-
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -189,18 +177,13 @@ export default function AssetTable({
         tabs={categoryTabs}
         active={activeCategory}
         counts={categoryCounts}
-        onChange={handleCategoryChange}
+        onChange={setActiveCategory}
       />
 
       <DataTable
         data={filteredAssets}
         columns={columns}
         keyExtractor={(asset) => asset.id}
-        selectedIds={selected}
-        onSelectionChange={(nextSet) => {
-          setSelected(nextSet);
-          onSelectionChange?.(nextSet);
-        }}
         onRowClick={onRowClick}
         emptyMessage="No assets match your search."
         toolbar={

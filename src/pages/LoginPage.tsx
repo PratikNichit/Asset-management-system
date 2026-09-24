@@ -15,10 +15,12 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import AppButton from '../components/AppButton';
+import { useAppSelector } from '../app/hooks';
+import { selectAuthError } from '../redux/authSlice';
 
 export interface LoginPageProps {
-  /** Callback triggered when user submits valid login credentials */
-  onLogin?: (email: string) => void;
+  /** Callback triggered when user submits login credentials. Should return a rejected promise on failure. */
+  onLogin?: (email: string, password: string) => Promise<void>;
 }
 
 /**
@@ -29,25 +31,39 @@ export interface LoginPageProps {
  */
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const theme = useTheme();
+  const authError = useAppSelector(selectAuthError);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Combine local validation errors with Redux auth errors
+  const error = localError || authError || '';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setLocalError('');
 
-    setTimeout(() => {
+    if (!email.trim()) {
+      setLocalError('Please enter your email address.');
+      return;
+    }
+    if (!password) {
+      setLocalError('Please enter your password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onLogin?.(email.trim(), password);
+    } catch {
+      // error is already in Redux via authSlice.signIn.rejected
+    } finally {
       setLoading(false);
-      // Validate credentials or allow login if entered
-      const targetEmail = email.trim() || 'admin@atlast.com';
-      onLogin?.(targetEmail);
-    }, 500);
+    }
   };
 
   return (

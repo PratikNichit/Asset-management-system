@@ -5,29 +5,25 @@ import Grid from '@mui/material/Grid';
 import type { ScheduleWorkFormState } from '../../redux/maintenanceSlice';
 import type { Employee } from '../../types/employee';
 import type { LocationItem } from '../../types/location';
-import { FieldLabel, SectionCard, SectionHeading } from './FormHelpers';
+import { FieldLabel, SectionCard, SectionHeading, selectSx, fieldSx } from './FormHelpers';
 
 export interface ScheduleAssignmentSectionProps {
   form: ScheduleWorkFormState;
   employees: Employee[];
   locations: LocationItem[];
   onFieldChange: (field: keyof ScheduleWorkFormState) => (value: string) => void;
+  /** When true, required-but-empty fields show an error state. Set after a failed "Next". */
+  showErrors?: boolean;
 }
-
-const selectSx = {
-  '& .MuiSelect-select': { fontSize: '0.85rem' },
-};
-
-const fieldSx = {
-  '& .MuiInputBase-input': { fontSize: '0.85rem' },
-};
 
 export default function ScheduleAssignmentSection({
   form,
   employees,
   locations,
   onFieldChange,
+  showErrors = false,
 }: ScheduleAssignmentSectionProps) {
+  const dateError = showErrors && !form.scheduledDate;
   return (
     <SectionCard>
       <SectionHeading
@@ -44,9 +40,10 @@ export default function ScheduleAssignmentSection({
             size="small"
             type="date"
             sx={fieldSx}
-            slotProps={{ inputLabel: { shrink: true } }}
             value={form.scheduledDate}
             onChange={(e) => onFieldChange('scheduledDate')(e.target.value)}
+            error={dateError}
+            helperText={dateError ? 'Scheduled date is required' : ' '}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>

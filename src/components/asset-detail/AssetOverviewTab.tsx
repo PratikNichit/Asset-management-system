@@ -55,7 +55,7 @@ export default function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
             </Typography>
           </Box>
           <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
-            $3,200
+            ₹3,200
           </Typography>
         </Box>
 

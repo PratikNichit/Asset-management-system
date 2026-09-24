@@ -1,70 +1,73 @@
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Divider from '@mui/material/Divider';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import RepeatIcon from '@mui/icons-material/Repeat';
-import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
-import type { RecurrenceOption, ScheduleWorkFormState } from '../../redux/maintenanceSlice';
-import AppButton from '../AppButton';
-import { FieldLabel, SectionCard } from './FormHelpers';
-
-const RECURRENCE_OPTIONS: RecurrenceOption[] = [
-  'Does not repeat',
-  'Daily',
-  'Weekly',
-  'Monthly',
-  'Quarterly',
-  'Annually',
-];
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import { SectionCard } from './FormHelpers';
 
 export interface ScheduleWorkSidebarProps {
-  form: ScheduleWorkFormState;
-  canSubmit: boolean;
-  onFieldChange: (field: keyof ScheduleWorkFormState) => (value: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
+  steps: string[];
+  activeStep: number;
+  /** Whether each step's required fields are currently satisfied. */
+  stepValid: boolean[];
+  onStepClick: (index: number) => void;
 }
 
 export default function ScheduleWorkSidebar({
-  form,
-  canSubmit,
-  onFieldChange,
-  onSubmit,
-  onCancel,
+  steps,
+  activeStep,
+  stepValid,
+  onStepClick,
 }: ScheduleWorkSidebarProps) {
   return (
     <Box sx={{ flex: '0 0 280px', minWidth: 260, position: 'sticky', top: 16 }}>
-      {/* Recurrence card */}
+      {/* Step progress */}
       <SectionCard>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.75 }}>
-          <RepeatIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>Recurrence</Typography>
-        </Box>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 1.75 }}>Progress</Typography>
 
-        <FieldLabel>Repeat</FieldLabel>
-        <Select
-          id="sw-recurrence"
-          fullWidth
-          size="small"
-          sx={{ '& .MuiSelect-select': { fontSize: '0.85rem' } }}
-          value={form.recurrence}
-          onChange={(e) => onFieldChange('recurrence')(e.target.value)}
-        >
-          {RECURRENCE_OPTIONS.map((r) => (
-            <MenuItem key={r} value={r} sx={{ fontSize: '0.85rem' }}>
-              {r}
-            </MenuItem>
-          ))}
-        </Select>
+        {steps.map((label, i) => {
+          const isActive = i === activeStep;
+          const isComplete = i < activeStep && stepValid[i];
+          // A step can be jumped to directly if it's already been reached,
+          // or if every step before it is valid.
+          const isReachable = i <= activeStep || stepValid.slice(0, i).every(Boolean);
 
-        <Typography
-          sx={{ fontSize: '0.78rem', color: 'text.secondary', mt: 1.25, lineHeight: 1.5 }}
-        >
-          Recurring orders are generated automatically after each completion.
-        </Typography>
+          return (
+            <Box
+              key={label}
+              onClick={() => isReachable && onStepClick(i)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                py: 0.75,
+                cursor: isReachable ? 'pointer' : 'default',
+                opacity: isReachable ? 1 : 0.5,
+                borderRadius: 1,
+                px: 0.5,
+                '&:hover': isReachable ? { bgcolor: 'action.hover' } : undefined,
+              }}
+            >
+              {isComplete ? (
+                <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
+              ) : (
+                <RadioButtonUncheckedIcon
+                  sx={{ fontSize: 18, color: isActive ? 'primary.main' : 'text.disabled' }}
+                />
+              )}
+              <Typography
+                sx={{
+                  fontSize: '0.85rem',
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? 'text.primary' : 'text.secondary',
+                }}
+              >
+                {label}
+              </Typography>
+            </Box>
+          );
+        })}
       </SectionCard>
 
       {/* Info callout */}
@@ -78,7 +81,6 @@ export default function ScheduleWorkSidebar({
             theme.palette.mode === 'light' ? 'rgba(109, 93, 246, 0.06)' : 'rgba(109, 93, 246, 0.12)',
           display: 'flex',
           gap: 1.25,
-          mb: 2,
         }}
       >
         <InfoOutlinedIcon
@@ -92,29 +94,6 @@ export default function ScheduleWorkSidebar({
           on the start date.
         </Typography>
       </Paper>
-
-      <Divider sx={{ mb: 2 }} />
-
-      <AppButton
-        id="schedule-work-submit-sidebar-btn"
-        variant="default"
-        fullWidth
-        startIcon={<BuildOutlinedIcon />}
-        disabled={!canSubmit}
-        onClick={onSubmit}
-        sx={{ boxShadow: canSubmit ? '0 2px 8px rgba(109, 93, 246, 0.35)' : 'none' }}
-      >
-        Schedule work
-      </AppButton>
-      <AppButton
-        id="schedule-work-cancel-sidebar-btn"
-        variant="ghost"
-        fullWidth
-        onClick={onCancel}
-        sx={{ mt: 1 }}
-      >
-        Cancel
-      </AppButton>
     </Box>
   );
 }

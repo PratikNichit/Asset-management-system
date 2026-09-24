@@ -7,6 +7,7 @@ export interface Department {
   code: string;
   /** Full name of Department Head, e.g. "Priya Sharma" */
   head: string;
+  headId?: string;
   /** Total count of staff members in department */
   membersCount: number;
   /** Total count of company assets assigned to department */
@@ -15,6 +16,7 @@ export interface Department {
   badgeBg?: string;
   /** Primary facility location */
   primaryLocation?: string;
+  locationId?: string;
   /** Parent organizational unit */
   parentDepartment?: string;
   /** Financial cost centre identifier, e.g. "CC-4021" */

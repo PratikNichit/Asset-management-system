@@ -19,12 +19,16 @@ export interface Asset {
   /** Short asset code, e.g. "AST-00184" */
   code: string;
   category: string;
+  categoryId?: string;
   /** Serial / barcode number */
   serial: string;
   department: string;
+  departmentId?: string;
   location: string;
+  locationId?: string;
   /** Assigned employee name, null when unassigned */
   assignedTo: string | null;
+  assignedToId?: string | null;
   /** ISO date string for warranty expiry, e.g. "2027-02-11" */
   warrantyExpiry: string | null;
   status: AssetStatus;

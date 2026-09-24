@@ -42,9 +42,15 @@ function useStatusColors() {
  * <AssetStatusBadge status="In Use" />
  */
 export default function AssetStatusBadge({ status }: AssetStatusBadgeProps) {
-  const colors  = useStatusColors();
-  const config  = STATUS_CONFIG[status];
-  const bgColor = colors[config.bgKey];
+  const colors = useStatusColors();
+  // Defensive: if `status` is unexpected/undefined, fall back to a neutral config
+  const config = STATUS_CONFIG[status as AssetStatus] ?? {
+    label: typeof status === 'string' && status.length > 0 ? status : 'Unknown',
+    bgKey: 'neutralBg' as const,
+    dotColor: '#8C929F',
+  };
+
+  const bgColor = colors[config.bgKey] ?? colors.neutralBg;
 
   return (
     <Chip

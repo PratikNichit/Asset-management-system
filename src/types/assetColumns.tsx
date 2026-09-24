@@ -74,14 +74,14 @@ export const DEFAULT_ASSET_COLUMNS: AssetColumnDef[] = [
       <Chip
         label={asset.category}
         size="small"
-        sx={{
-          bgcolor: 'rgba(241,243,249,1)',
+        sx={(theme) => ({
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(241,243,249,1)',
           color: 'text.primary',
           fontWeight: 500,
           fontSize: '0.75rem',
           height: 22,
           borderRadius: 1,
-        }}
+        })}
       />
     ),
   },

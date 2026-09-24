@@ -7,15 +7,21 @@ import MenuItem from '@mui/material/MenuItem';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import type { SxProps, Theme } from '@mui/material/styles';
 import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { addDepartment, selectAllDepartments } from '../redux/departmentsSlice';
+import { addDepartmentAsync, selectAllDepartments } from '../redux/departmentsSlice';
 import { selectAllEmployeesList } from '../redux/employeesSlice';
 import { selectAllLocations } from '../redux/locationsSlice';
 import { useLayout } from '../hooks/useLayout';
 import AppButton from '../components/AppButton';
 import type { Department } from '../types/department';
+
+const outlineButtonSx: SxProps<Theme> = {
+  borderColor: 'customColors.borderLight',
+  color: 'text.primary',
+};
 
 export interface NewDepartmentPageProps {
   organizationName?: string;
@@ -44,23 +50,25 @@ export default function NewDepartmentPage({
   const [description, setDescription] = useState('');
 
   // UI Toast State
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' | 'warning' } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbLinks([
-      { label: organizationName, navId: 'dashboard' },
-      { label: 'Departments', navId: 'departments' },
+      { label: organizationName, path: '/dashboard' },
+      { label: 'Departments', path: '/departments' },
       { label: 'New Department' },
     ]);
   }, [organizationName, setBreadcrumbLinks]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!departmentName.trim()) {
-      setToastMessage('Please enter a department name.');
+      setToast({ message: 'Please enter a department name.', severity: 'warning' });
       return;
     }
 
+    setIsSubmitting(true);
     // Auto-generate 2-letter badge code from department name
     const generatedCode = departmentName.trim().substring(0, 2).toUpperCase();
 
@@ -76,13 +84,31 @@ export default function NewDepartmentPage({
       description: description.trim() || undefined,
     };
 
-    dispatch(addDepartment(newDept));
-
-    if (onSuccess) {
-      onSuccess();
-    } else if (onCancel) {
-      onCancel();
+    try {
+      await dispatch(addDepartmentAsync(newDept)).unwrap();
+      if (onSuccess) {
+        onSuccess();
+      } else if (onCancel) {
+        onCancel();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ message: `Failed to create department: ${msg}`, severity: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Reusable sx for all TextField inputs — theme-aware
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+      fontSize: '0.925rem',
+      bgcolor: 'background.paper',
+      '& fieldset': { borderColor: 'divider' },
+      '&:hover fieldset': { borderColor: 'text.secondary' },
+      '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
+    },
   };
 
   return (
@@ -97,14 +123,27 @@ export default function NewDepartmentPage({
           gap: 2,
         }}
       >
-        <Box>
+        {/* Left side: back button + title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+          {onCancel && (
+            <AppButton
+              variant="outline"
+              size="icon"
+              onClick={onCancel}
+              aria-label="Back to departments"
+              sx={outlineButtonSx}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </AppButton>
+          )}
+          <Box>
           <Typography
             variant="h4"
             sx={{
               fontWeight: 800,
               fontFamily: '"Manrope", sans-serif',
               fontSize: '1.75rem',
-              color: '#0F172A',
+              color: 'text.primary',
               letterSpacing: '-0.02em',
             }}
           >
@@ -115,42 +154,22 @@ export default function NewDepartmentPage({
             sx={{
               mt: 0.5,
               fontSize: '0.9rem',
-              color: '#64748B',
+              color: 'text.secondary',
               fontFamily: '"Manrope", sans-serif',
             }}
           >
             Group people and assets under an organizational unit.
           </Typography>
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {onCancel && (
-            <AppButton
-              variant="ghost"
-              size="sm"
-              startIcon={<ArrowBackIcon sx={{ fontSize: 18 }} />}
-              onClick={onCancel}
-              sx={{
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                fontFamily: '"Manrope", sans-serif',
-                px: 1.5,
-                '&:hover': {
-                  bgcolor: '#F1F5F9',
-                  color: '#0F172A',
-                },
-              }}
-            >
-              Cancel
-            </AppButton>
-          )}
-
           <AppButton
             variant="default"
             size="sm"
             startIcon={<ApartmentOutlinedIcon sx={{ fontSize: 19 }} />}
             onClick={() => handleSubmit()}
+            loading={isSubmitting}
             sx={{
               bgcolor: '#4F46E5',
               borderRadius: '10px',
@@ -178,9 +197,12 @@ export default function NewDepartmentPage({
         sx={{
           p: { xs: 2.5, sm: 4 },
           borderRadius: 3.5,
-          borderColor: '#E2E8F0',
-          bgcolor: '#FFFFFF',
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? '0 1px 3px rgba(0,0,0,0.4)'
+              : '0 1px 3px rgba(15, 23, 42, 0.03)',
           display: 'flex',
           flexDirection: 'column',
           gap: 3,
@@ -192,7 +214,7 @@ export default function NewDepartmentPage({
             fontWeight: 700,
             fontSize: '1.1rem',
             fontFamily: '"Manrope", sans-serif',
-            color: '#0F172A',
+            color: 'text.primary',
           }}
         >
           Details
@@ -204,7 +226,7 @@ export default function NewDepartmentPage({
             sx={{
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: '#334155',
+              color: 'text.primary',
               mb: 0.85,
               fontFamily: '"Manrope", sans-serif',
             }}
@@ -217,16 +239,7 @@ export default function NewDepartmentPage({
             placeholder="e.g. Quality Assurance"
             value={departmentName}
             onChange={(e) => setDepartmentName(e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                fontSize: '0.925rem',
-                bgcolor: '#FFFFFF',
-                '& fieldset': { borderColor: '#CBD5E1' },
-                '&:hover fieldset': { borderColor: '#94A3B8' },
-                '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-              },
-            }}
+            sx={inputSx}
           />
         </Box>
 
@@ -244,7 +257,7 @@ export default function NewDepartmentPage({
               sx={{
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                color: '#334155',
+                color: 'text.primary',
                 mb: 0.85,
                 fontFamily: '"Manrope", sans-serif',
               }}
@@ -268,18 +281,9 @@ export default function NewDepartmentPage({
                   },
                 },
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  fontSize: '0.925rem',
-                  bgcolor: '#FFFFFF',
-                  '& fieldset': { borderColor: '#CBD5E1' },
-                  '&:hover fieldset': { borderColor: '#94A3B8' },
-                  '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-                },
-              }}
+              sx={inputSx}
             >
-              <MenuItem value="" sx={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+              <MenuItem value="" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
                 Select person
               </MenuItem>
               {employees.map((emp) => (
@@ -296,7 +300,7 @@ export default function NewDepartmentPage({
               sx={{
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                color: '#334155',
+                color: 'text.primary',
                 mb: 0.85,
                 fontFamily: '"Manrope", sans-serif',
               }}
@@ -320,18 +324,9 @@ export default function NewDepartmentPage({
                   },
                 },
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  fontSize: '0.925rem',
-                  bgcolor: '#FFFFFF',
-                  '& fieldset': { borderColor: '#CBD5E1' },
-                  '&:hover fieldset': { borderColor: '#94A3B8' },
-                  '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-                },
-              }}
+              sx={inputSx}
             >
-              <MenuItem value="" sx={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+              <MenuItem value="" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
                 Select location
               </MenuItem>
               {locations.map((loc) => (
@@ -357,7 +352,7 @@ export default function NewDepartmentPage({
               sx={{
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                color: '#334155',
+                color: 'text.primary',
                 mb: 0.85,
                 fontFamily: '"Manrope", sans-serif',
               }}
@@ -370,16 +365,7 @@ export default function NewDepartmentPage({
               size="medium"
               value={parentDepartment}
               onChange={(e) => setParentDepartment(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  fontSize: '0.925rem',
-                  bgcolor: '#FFFFFF',
-                  '& fieldset': { borderColor: '#CBD5E1' },
-                  '&:hover fieldset': { borderColor: '#94A3B8' },
-                  '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-                },
-              }}
+              sx={inputSx}
             >
               <MenuItem value="None" sx={{ fontSize: '0.9rem' }}>
                 None
@@ -398,7 +384,7 @@ export default function NewDepartmentPage({
               sx={{
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                color: '#334155',
+                color: 'text.primary',
                 mb: 0.85,
                 fontFamily: '"Manrope", sans-serif',
               }}
@@ -411,16 +397,7 @@ export default function NewDepartmentPage({
               placeholder="e.g. CC-4021"
               value={costCenterCode}
               onChange={(e) => setCostCenterCode(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  fontSize: '0.925rem',
-                  bgcolor: '#FFFFFF',
-                  '& fieldset': { borderColor: '#CBD5E1' },
-                  '&:hover fieldset': { borderColor: '#94A3B8' },
-                  '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-                },
-              }}
+              sx={inputSx}
             />
           </Box>
         </Box>
@@ -431,7 +408,7 @@ export default function NewDepartmentPage({
             sx={{
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: '#334155',
+              color: 'text.primary',
               mb: 0.85,
               fontFamily: '"Manrope", sans-serif',
             }}
@@ -445,29 +422,20 @@ export default function NewDepartmentPage({
             placeholder="What this department is responsible for..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                fontSize: '0.925rem',
-                bgcolor: '#FFFFFF',
-                '& fieldset': { borderColor: '#CBD5E1' },
-                '&:hover fieldset': { borderColor: '#94A3B8' },
-                '&.Mui-focused fieldset': { borderColor: '#4F46E5', borderWidth: '1.5px' },
-              },
-            }}
+            sx={inputSx}
           />
         </Box>
       </Paper>
 
       {/* Snackbar Notification Toast */}
       <Snackbar
-        open={Boolean(toastMessage)}
-        autoHideDuration={4000}
-        onClose={() => setToastMessage(null)}
+        open={Boolean(toast)}
+        autoHideDuration={5000}
+        onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setToastMessage(null)} severity="warning" sx={{ width: '100%' }}>
-          {toastMessage}
+        <Alert onClose={() => setToast(null)} severity={toast?.severity ?? 'warning'} sx={{ width: '100%' }}>
+          {toast?.message}
         </Alert>
       </Snackbar>
     </Box>

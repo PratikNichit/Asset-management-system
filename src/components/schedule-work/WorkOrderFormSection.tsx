@@ -6,7 +6,7 @@ import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
 import type { WorkOrderType, WorkOrderStatus, WorkOrderPriority, ScheduleWorkFormState } from '../../redux/maintenanceSlice';
 import type { Asset } from '../../types/asset';
-import { FieldLabel, SectionCard, SectionHeading } from './FormHelpers';
+import { FieldLabel, SectionCard, SectionHeading, selectSx, fieldSx } from './FormHelpers';
 
 const WORK_ORDER_TYPES: WorkOrderType[] = ['Preventive', 'Repair', 'Calibration', 'Inspection'];
 const WORK_ORDER_STATUSES: WorkOrderStatus[] = ['Scheduled', 'In Progress', 'Overdue', 'Completed'];
@@ -23,21 +23,19 @@ export interface WorkOrderFormSectionProps {
   form: ScheduleWorkFormState;
   assets: Asset[];
   onFieldChange: (field: keyof ScheduleWorkFormState) => (value: string) => void;
+  /** When true, required-but-empty fields show an error state. Set after a failed "Next". */
+  showErrors?: boolean;
 }
-
-const selectSx = {
-  '& .MuiSelect-select': { fontSize: '0.85rem' },
-};
-
-const fieldSx = {
-  '& .MuiInputBase-input': { fontSize: '0.85rem' },
-};
 
 export default function WorkOrderFormSection({
   form,
   assets,
   onFieldChange,
+  showErrors = false,
 }: WorkOrderFormSectionProps) {
+  const titleError = showErrors && !form.title?.trim();
+  const assetError = showErrors && !form.assetId;
+  const typeError = showErrors && !form.type;
   return (
     <SectionCard>
       <SectionHeading
@@ -56,6 +54,8 @@ export default function WorkOrderFormSection({
           sx={fieldSx}
           value={form.title}
           onChange={(e) => onFieldChange('title')(e.target.value)}
+          error={titleError}
+          helperText={titleError ? 'Title is required' : ' '}
         />
       </Box>
 
@@ -71,6 +71,7 @@ export default function WorkOrderFormSection({
             sx={selectSx}
             value={form.assetId}
             onChange={(e) => onFieldChange('assetId')(e.target.value)}
+            error={assetError}
             renderValue={(v) =>
               v ? (assets.find((a) => a.id === v)?.name ?? v) : 'Select asset'
             }
@@ -81,6 +82,9 @@ export default function WorkOrderFormSection({
               </MenuItem>
             ))}
           </Select>
+          {assetError && (
+            <Box sx={{ fontSize: '0.75rem', color: 'error.main', mt: 0.5 }}>Asset is required</Box>
+          )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <FieldLabel required>Type</FieldLabel>
@@ -91,6 +95,7 @@ export default function WorkOrderFormSection({
             sx={selectSx}
             value={form.type}
             onChange={(e) => onFieldChange('type')(e.target.value)}
+            error={typeError}
           >
             {WORK_ORDER_TYPES.map((t) => (
               <MenuItem key={t} value={t} sx={{ fontSize: '0.85rem' }}>
@@ -98,6 +103,9 @@ export default function WorkOrderFormSection({
               </MenuItem>
             ))}
           </Select>
+          {typeError && (
+            <Box sx={{ fontSize: '0.75rem', color: 'error.main', mt: 0.5 }}>Type is required</Box>
+          )}
         </Grid>
       </Grid>
 

@@ -1,59 +1,65 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LayoutContext } from './LayoutContext';
 import type { BreadcrumbItem } from './LayoutContext';
 
 export interface LayoutProviderProps {
   children: ReactNode;
-  defaultActiveItem?: string;
   defaultBreadcrumbs?: string[];
 }
 
 export function LayoutProvider({
   children,
-  defaultActiveItem = 'dashboard',
   defaultBreadcrumbs = ['Atlas Industries', 'Asset Management'],
 }: LayoutProviderProps) {
-  const [activeItem, setActiveItem] = useState(defaultActiveItem);
+  const navigate = useNavigate();
   const [breadcrumbs, setBreadcrumbs] = useState(defaultBreadcrumbs);
   const [breadcrumbLinks, setBreadcrumbLinks] = useState<BreadcrumbItem[]>(
     defaultBreadcrumbs.map((label) => ({ label }))
   );
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
 
-  const navigateToAsset = (assetId: string) => {
+  const navigateToAsset = useCallback((assetId: string) => {
     setSelectedAssetId(assetId);
-    setActiveItem('assets');
-  };
+    navigate('/assets');
+  }, [navigate]);
 
   /** Sync plain labels and rich links together when plain setter is called */
-  const handleSetBreadcrumbs = (crumbs: string[]) => {
+  const handleSetBreadcrumbs = useCallback((crumbs: string[]) => {
     setBreadcrumbs(crumbs);
-    // Preserve existing navIds where the label still matches
+    // Preserve existing paths where the label still matches
     setBreadcrumbLinks((prev) =>
       crumbs.map((label) => {
         const existing = prev.find((p) => p.label === label);
         return existing ?? { label };
       })
     );
-  };
+  }, []);
+
+  const handleSetBreadcrumbLinks = useCallback((crumbs: BreadcrumbItem[]) => {
+    setBreadcrumbLinks(crumbs);
+    setBreadcrumbs(crumbs.map((c) => c.label));
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    breadcrumbs,
+    setBreadcrumbs: handleSetBreadcrumbs,
+    breadcrumbLinks,
+    setBreadcrumbLinks: handleSetBreadcrumbLinks,
+    selectedAssetId,
+    setSelectedAssetId,
+    navigateToAsset,
+  }), [
+    breadcrumbs,
+    handleSetBreadcrumbs,
+    breadcrumbLinks,
+    handleSetBreadcrumbLinks,
+    selectedAssetId,
+    navigateToAsset
+  ]);
 
   return (
-    <LayoutContext.Provider
-      value={{
-        activeItem,
-        setActiveItem,
-        breadcrumbs,
-        setBreadcrumbs: handleSetBreadcrumbs,
-        breadcrumbLinks,
-        setBreadcrumbLinks: (crumbs) => {
-          setBreadcrumbLinks(crumbs);
-          setBreadcrumbs(crumbs.map((c) => c.label));
-        },
-        selectedAssetId,
-        setSelectedAssetId,
-        navigateToAsset,
-      }}
-    >
+    <LayoutContext.Provider value={contextValue}>
       {children}
     </LayoutContext.Provider>
   );
