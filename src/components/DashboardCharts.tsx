@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 import { useTheme } from '@mui/material/styles';
 import type { MovementPoint, MovementRange } from '../redux/dashboardSlice';
 
@@ -180,6 +181,14 @@ export function AssetMovementChart({ data, range, onRangeChange, loading }: Asse
             </Box>
           </Box>
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Assets added versus retired by month">
+            <style>
+              {`
+                @keyframes revealRight {
+                  from { clip-path: inset(0 100% 0 0); }
+                  to { clip-path: inset(0 0 0 0); }
+                }
+              `}
+            </style>
             <defs>
               <linearGradient id="mvAdded" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={added} stopOpacity="0.22" />
@@ -198,10 +207,12 @@ export function AssetMovementChart({ data, range, onRangeChange, loading }: Asse
               </g>
             ))}
 
-            <path d={areaPath(chart.addedPts)} fill="url(#mvAdded)" />
-            <path d={areaPath(chart.retiredPts)} fill="url(#mvRetired)" />
-            <path d={smoothPath(chart.addedPts, pad.t, bottom)} fill="none" stroke={added} strokeWidth="2" />
-            <path d={smoothPath(chart.retiredPts, pad.t, bottom)} fill="none" stroke={retired} strokeWidth="2" />
+            <g style={{ animation: 'revealRight 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards' }}>
+              <path d={areaPath(chart.addedPts)} fill="url(#mvAdded)" />
+              <path d={areaPath(chart.retiredPts)} fill="url(#mvRetired)" />
+              <path d={smoothPath(chart.addedPts, pad.t, bottom)} fill="none" stroke={added} strokeWidth="2" />
+              <path d={smoothPath(chart.retiredPts, pad.t, bottom)} fill="none" stroke={retired} strokeWidth="2" />
+            </g>
 
             {data.map((d, i) => (
               <g key={d.key}>
@@ -211,9 +222,16 @@ export function AssetMovementChart({ data, range, onRangeChange, loading }: Asse
                   </text>
                 )}
                 {/* invisible hit targets → native tooltips */}
-                <circle cx={chart.x(i)} cy={chart.y(d.added)} r="6" fill="transparent">
-                  <title>{`${d.key}: ${d.added} added, ${d.retired} retired`}</title>
-                </circle>
+                <Tooltip title={`${d.label}: ${d.added} added, ${d.retired} retired`} arrow placement="top">
+                  <rect 
+                    x={chart.x(i) - (iw / Math.max(1, data.length - 1)) / 2} 
+                    y={0} 
+                    width={iw / Math.max(1, data.length - 1)} 
+                    height={H} 
+                    fill="transparent" 
+                    style={{ cursor: 'pointer' }}
+                  />
+                </Tooltip>
               </g>
             ))}
           </svg>
@@ -254,21 +272,37 @@ export function CategoryDonut({ data, loading }: { data: CountDatum[]; loading?:
         <>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <svg viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Assets by category">
-              <g transform="rotate(-90 100 100)">
+              <style>
+                {`
+                  @keyframes spinDonut {
+                    from { transform: rotate(-270deg) scale(0.5); opacity: 0; }
+                    to { transform: rotate(-90deg) scale(1); opacity: 1; }
+                  }
+                `}
+              </style>
+              <g
+                transform="rotate(-90 100 100)"
+                style={{
+                  animation: 'spinDonut 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards',
+                  transformOrigin: '100px 100px',
+                }}
+              >
                 {segments.map((s) => (
-                  <circle
-                    key={s.name}
-                    cx="100"
-                    cy="100"
-                    r={s.r}
-                    fill="none"
-                    stroke={s.color}
-                    strokeWidth="26"
-                    strokeDasharray={s.dash}
-                    strokeDashoffset={s.offset}
-                  >
-                    <title>{`${s.name}: ${s.value}`}</title>
-                  </circle>
+                  <Tooltip key={s.name} title={`${s.name}: ${s.value}`} arrow placement="top">
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r={s.r}
+                      fill="none"
+                      stroke={s.color}
+                      strokeWidth="26"
+                      strokeDasharray={s.dash}
+                      strokeDashoffset={s.offset}
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                    />
+                  </Tooltip>
                 ))}
               </g>
               <text x="100" y="98" textAnchor="middle" fontSize="24" fontWeight="700" fill={theme.palette.text.primary} fontFamily="Manrope, sans-serif">
@@ -294,54 +328,182 @@ export function CategoryDonut({ data, loading }: { data: CountDatum[]; loading?:
 
 // ─── Assets by department (bar chart) ─────────────────────────────────────────
 
-export function DepartmentBars({ data, loading, onDetails }: { data: CountDatum[]; loading?: boolean; onDetails?: () => void }) {
+// ─── Assets by department (bar chart) ─────────────────────────────────────────
+
+export function DepartmentBars({
+  data,
+  loading,
+  onDetails,
+}: {
+  data: CountDatum[];
+  loading?: boolean;
+  onDetails?: () => void;
+}) {
   const theme = useTheme();
+
   const axis = theme.palette.text.secondary;
   const grid = theme.palette.customColors.borderLight;
 
-  const W = 800, H = 270;
-  const pad = { l: 34, r: 12, t: 12, b: 30 };
+  const W = 800;
+  const H = 270;
+
+  const pad = {
+    l: 34,
+    r: 12,
+    t: 12,
+    b: 30,
+  };
+
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
 
-  const scale = niceScale(Math.max(...data.map((d) => d.value), 0));
-  const y = (v: number) => pad.t + ih - (v / scale.max) * ih;
-  const slot = data.length ? iw / data.length : iw;
-  const barW = Math.min(slot * 0.6, 96);
-  const ticks = Array.from({ length: 5 }, (_, i) => i * scale.step);
-  const short = (s: string) => (s.length > 13 ? `${s.slice(0, 12)}…` : s);
+  // Get maximum value safely
+  const maxValue = Math.max(...data.map((d) => d.value), 0);
 
-  const detailsLink = onDetails && (
+  const scale = niceScale(maxValue);
+
+  const y = (value: number) =>
+    pad.t + ih - (value / scale.max) * ih;
+
+  const slot = data.length > 0 ? iw / data.length : iw;
+
+  const barW = Math.min(slot * 0.6, 96);
+
+  const ticks = Array.from(
+    { length: 5 },
+    (_, i) => i * scale.step
+  );
+
+  const short = (value: string) =>
+    value.length > 13
+      ? `${value.slice(0, 12)}…`
+      : value;
+
+  const detailsLink = onDetails ? (
     <Box
       component="button"
+      type="button"
       onClick={onDetails}
-      sx={{ border: 'none', bgcolor: 'transparent', p: 0, cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, color: theme.palette.primary.main }}
+      sx={{
+        border: 'none',
+        bgcolor: 'transparent',
+        p: 0,
+        cursor: 'pointer',
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        color: theme.palette.primary.main,
+      }}
     >
       Details
     </Box>
-  );
+  ) : undefined;
 
   return (
-    <DashCard title="Assets by department" action={detailsLink}>
+    <DashCard
+      title="Assets by department"
+      action={detailsLink}
+    >
       {data.length === 0 ? (
-        <EmptyState message={loading ? 'Loading assets…' : 'No department data yet.'} height={240} />
+        <EmptyState
+          message={
+            loading
+              ? 'Loading assets…'
+              : 'No department data yet.'
+          }
+          height={240}
+        />
       ) : (
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Assets per department">
-          {ticks.map((t) => (
-            <g key={t}>
-              <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke={grid} strokeDasharray="3 4" />
-              <text x={pad.l - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill={axis}>{t}</text>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width="100%"
+          role="img"
+          aria-label="Assets per department"
+        >
+          <style>
+            {`
+              @keyframes growBar {
+                from {
+                  transform: scaleY(0);
+                  opacity: 0;
+                }
+
+                to {
+                  transform: scaleY(1);
+                  opacity: 1;
+                }
+              }
+            `}
+          </style>
+
+          {/* Y-axis gridlines */}
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line
+                x1={pad.l}
+                x2={W - pad.r}
+                y1={y(tick)}
+                y2={y(tick)}
+                stroke={grid}
+                strokeDasharray="3 4"
+              />
+
+              <text
+                x={pad.l - 8}
+                y={y(tick) + 4}
+                textAnchor="end"
+                fontSize="11"
+                fill={axis}
+              >
+                {tick}
+              </text>
             </g>
           ))}
-          {data.map((d, i) => {
-            const cx = pad.l + slot * i + slot / 2;
-            const h = pad.t + ih - y(d.value);
+
+          {/* Bars */}
+          {data.map((item, index) => {
+            const cx =
+              pad.l +
+              slot * index +
+              slot / 2;
+
+            const barHeight =
+              pad.t +
+              ih -
+              y(item.value);
+
             return (
-              <g key={d.name}>
-                <rect x={cx - barW / 2} y={y(d.value)} width={barW} height={Math.max(h, 0)} rx="4" fill={theme.palette.primary.main}>
-                  <title>{`${d.name}: ${d.value}`}</title>
-                </rect>
-                <text x={cx} y={H - 10} textAnchor="middle" fontSize="11" fill={axis}>{short(d.name)}</text>
+              <g key={item.name}>
+                <Tooltip title={`${item.name}: ${item.value}`} arrow placement="top">
+                  <rect
+                    x={cx - barW / 2}
+                    y={y(item.value)}
+                    width={barW}
+                    height={Math.max(barHeight, 0)}
+                    rx={4}
+                    fill={theme.palette.primary.main}
+                    style={{
+                      cursor: 'pointer',
+                      animation:
+                        'growBar 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards',
+                      animationDelay: `${index * 0.05}s`,
+                      opacity: 0,
+                      transformOrigin: `0px ${pad.t + ih}px`,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.2)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+                  />
+                </Tooltip>
+
+                {/* Department name */}
+                <text
+                  x={cx}
+                  y={H - 10}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill={axis}
+                >
+                  {short(item.name)}
+                </text>
               </g>
             );
           })}

@@ -35,8 +35,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const theme = useTheme();
   const authError = useAppSelector(selectAuthError);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('nichitpratik9@gmail.com');
+  const [password, setPassword] = useState('Admin@123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -676,7 +676,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 border: '1px solid rgba(255, 255, 255, 0.4)',
               }}
             >
-              S
+              PN
             </Avatar>
             <Typography
               variant="caption"
@@ -686,7 +686,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 fontSize: '0.8rem',
               }}
             >
-              <strong>Sofia Alvarez</strong> — Head of Ops, Meridian Manufacturing
+              <strong>Pratik Nicit</strong> — Founder, Atlas.co
             </Typography>
           </Box>
         </Box>
