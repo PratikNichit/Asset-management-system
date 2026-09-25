@@ -137,12 +137,25 @@ export const fetchCategories = createAsyncThunk('categories/fetchCategories', as
   }
 });
 
+const normalizeDepreciationMethod = (method?: string | null): string | null => {
+  if (!method || method.trim().toLowerCase() === 'none') return null;
+  const lower = method.trim().toLowerCase();
+  if (lower === 'straight line') return 'Straight Line';
+  if (lower === 'declining balance') return 'Declining Balance';
+  return method.trim();
+};
+
 export const addCategoryAsync = createAsyncThunk('categories/addCategoryAsync', async (newCat: Omit<AssetCategoryItem, 'id'>, { getState, rejectWithValue }) => {
   try {
     const state = getState() as RootState;
     const nextNum = state.categories.list.length + 1;
     const id = `CAT-${String(nextNum).padStart(3, '0')}`;
-    const catToAdd = { id, ...newCat };
+    const normalizedMethod = normalizeDepreciationMethod(newCat.depreciationMethod);
+    const catToAdd = {
+      id,
+      ...newCat,
+      depreciationMethod: normalizedMethod ?? undefined,
+    };
 
     if (isSupabaseConfigured()) {
       const { error } = await supabase.from('categories').insert([{
@@ -151,7 +164,7 @@ export const addCategoryAsync = createAsyncThunk('categories/addCategoryAsync', 
         icon: catToAdd.iconType,
         color: catToAdd.bgColor,
         description: catToAdd.description,
-        depreciation_method: catToAdd.depreciationMethod,
+        depreciation_method: normalizedMethod,
         useful_life_years: catToAdd.usefulLifeYears,
       }]);
       if (error) throw error;
@@ -164,18 +177,24 @@ export const addCategoryAsync = createAsyncThunk('categories/addCategoryAsync', 
 
 export const updateCategoryAsync = createAsyncThunk('categories/updateCategoryAsync', async (cat: AssetCategoryItem, { rejectWithValue }) => {
   try {
+    const normalizedMethod = normalizeDepreciationMethod(cat.depreciationMethod);
+    const catToUpdate = {
+      ...cat,
+      depreciationMethod: normalizedMethod ?? undefined,
+    };
+
     if (isSupabaseConfigured()) {
       const { error } = await supabase.from('categories').update({
-        name: cat.name,
-        icon: cat.iconType,
-        color: cat.bgColor,
-        description: cat.description,
-        depreciation_method: cat.depreciationMethod,
-        useful_life_years: cat.usefulLifeYears,
-      }).eq('id', cat.id);
+        name: catToUpdate.name,
+        icon: catToUpdate.iconType,
+        color: catToUpdate.bgColor,
+        description: catToUpdate.description,
+        depreciation_method: normalizedMethod,
+        useful_life_years: catToUpdate.usefulLifeYears,
+      }).eq('id', catToUpdate.id);
       if (error) throw error;
     }
-    return cat;
+    return catToUpdate;
   } catch (err) {
     return rejectWithValue((err as Error).message);
   }
@@ -203,7 +222,12 @@ const categoriesSlice = createSlice({
     addCategory(state, action: PayloadAction<Omit<AssetCategoryItem, 'id'>>) {
       const nextNum = state.list.length + 1;
       const id = `CAT-${String(nextNum).padStart(3, '0')}`;
-      const newCat = { id, ...action.payload };
+      const normalizedMethod = normalizeDepreciationMethod(action.payload.depreciationMethod);
+      const newCat = {
+        id,
+        ...action.payload,
+        depreciationMethod: normalizedMethod ?? undefined,
+      };
       state.list.push(newCat);
 
       if (isSupabaseConfigured()) {
@@ -214,7 +238,7 @@ const categoriesSlice = createSlice({
           color: newCat.bgColor,
           asset_count: newCat.assetsCount,
           description: newCat.description,
-          depreciation_method: newCat.depreciationMethod,
+          depreciation_method: normalizedMethod,
           useful_life_years: newCat.usefulLifeYears,
         }]).then();
       }

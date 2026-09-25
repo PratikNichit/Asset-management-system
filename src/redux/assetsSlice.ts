@@ -203,6 +203,16 @@ export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (_, { re
           assignedToId: row.assigned_to_id,
           warrantyExpiry: row.warranty_expiry,
           status: row.status,
+          // Fields collected by the "Add asset" wizard that previously had
+          // nowhere to go — now read back from v_assets (see migration).
+          brand: row.brand,
+          model: row.model,
+          purchaseDate: row.purchase_date,
+          purchaseCost: row.purchase_cost != null ? Number(row.purchase_cost) : null,
+          vendor: row.vendor,
+          description: row.description,
+          images: row.images ?? [],
+          documents: row.documents ?? [],
         })) as Asset[];
       }
     }
@@ -235,6 +245,17 @@ export const addAssetAsync = createAsyncThunk('assets/addAssetAsync', async (new
           location_id: newAsset.locationId,
           warranty_expiry: newAsset.warrantyExpiry,
           status: databaseStatus ?? 'Available',
+          // Previously collected by the wizard and silently dropped:
+          brand: newAsset.brand || null,
+          model: newAsset.model || null,
+          purchase_date: newAsset.purchaseDate || null,
+          purchase_cost: newAsset.purchaseCost != null && newAsset.purchaseCost !== ('' as any)
+            ? Number(newAsset.purchaseCost)
+            : null,
+          vendor: newAsset.vendor || null,
+          description: newAsset.description || null,
+          images: newAsset.images ?? [],
+          documents: newAsset.documents ?? [],
         },
       ]);
       if (error) throw error;
@@ -263,13 +284,23 @@ export const updateAssetAsync = createAsyncThunk('assets/updateAssetAsync', asyn
         code: asset.code,
         serial: asset.serial,
         warranty_expiry: asset.warrantyExpiry,
+        brand: asset.brand || null,
+        model: asset.model || null,
+        purchase_date: asset.purchaseDate || null,
+        purchase_cost: asset.purchaseCost != null && asset.purchaseCost !== ('' as any)
+          ? Number(asset.purchaseCost)
+          : null,
+        vendor: asset.vendor || null,
+        description: asset.description || null,
+        images: asset.images ?? [],
+        documents: asset.documents ?? [],
       };
-      
+
       if (asset.categoryId) updatePayload.category_id = asset.categoryId;
       if (asset.departmentId) updatePayload.department_id = asset.departmentId;
       if (asset.locationId) updatePayload.location_id = asset.locationId;
       if (asset.status === 'Retired' || asset.status === 'Disposed') updatePayload.status = asset.status;
-      
+
       const { error } = await supabase.from('assets').update(updatePayload).eq('id', asset.id);
       if (error) throw error;
     }

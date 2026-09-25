@@ -33,12 +33,17 @@ export interface WorkOrder {
   id: string;
   assetName: string;
   assetCode: string;
+  department?: string;
+  category?: string;
   type: WorkOrderType;
   date: string;           // ISO date string
   technicianId: string;
   technicianName: string;
   technicianAvatar: string; // initials
   technicianAvatarColor: string;
+  vendor?: string;
+  downtimeHours?: number;
+  description?: string;
   costUsd: number;
   status: WorkOrderStatus;
 }
@@ -191,12 +196,17 @@ export const fetchWorkOrders = createAsyncThunk('maintenance/fetchWorkOrders', a
           id: row.id,
           assetName: row.asset_name,
           assetCode: row.asset_code,
+          department: row.department,
+          category: row.category,
           type: normalizeWorkOrderType(row.type),
           date: row.date,
           technicianId: row.technician_id,
           technicianName: row.technician_name,
           technicianAvatar: row.technician_avatar,
-          technicianAvatarColor: row.technician_avatar_color,
+          technicianAvatarColor: row.technician_avatar_color ?? '#5159D7',
+          vendor: row.vendor,
+          downtimeHours: row.downtime_hours != null ? Number(row.downtime_hours) : undefined,
+          description: row.notes,
           costUsd: Number(row.cost_usd),
           status: row.status as WorkOrderStatus,
         })) as WorkOrder[];
@@ -274,6 +284,10 @@ const maintenanceSlice = createSlice({
         technicianName: form.technicianId,
         technicianAvatar: form.technicianId.slice(0, 2).toUpperCase(),
         technicianAvatarColor: '#5159D7',
+        // Previously collected by the form and silently dropped:
+        vendor: form.vendor || undefined,
+        downtimeHours: form.estimatedDowntimeHours ? parseFloat(form.estimatedDowntimeHours) : undefined,
+        description: form.description || undefined,
         costUsd: parseFloat(form.estimatedCost) || 0,
         status: form.status,
       };
@@ -290,6 +304,8 @@ const maintenanceSlice = createSlice({
           cost_usd: newOrder.costUsd,
           status: newOrder.status,
           notes: form.description,
+          vendor: form.vendor || null,
+          downtime_hours: form.estimatedDowntimeHours ? parseFloat(form.estimatedDowntimeHours) : null,
         }]).then();
       }
     },

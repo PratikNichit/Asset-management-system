@@ -29,7 +29,7 @@ export interface NewCategoryPageProps {
 
 const PARENT_CATEGORIES = ['None', 'Hardware', 'IT Equipment', 'Heavy Machinery', 'Office Supplies', 'Vehicles'];
 
-const DEPRECIATION_METHODS = ['Straight line', 'Declining balance', 'Sum-of-years-digits', 'None'];
+const DEPRECIATION_METHODS = ['Straight Line', 'Declining Balance', 'None'];
 
 const MAINTENANCE_INTERVALS = ['None', 'Monthly', 'Quarterly', 'Biannually', 'Annually'];
 
@@ -58,7 +58,7 @@ export default function NewCategoryPage({
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
 
   // Defaults State
-  const [depreciationMethod, setDepreciationMethod] = useState('Straight line');
+  const [depreciationMethod, setDepreciationMethod] = useState('Straight Line');
   const [usefulLifeYears, setUsefulLifeYears] = useState<number | ''>(5);
   const [maintenanceInterval, setMaintenanceInterval] = useState('None');
   const [requiresCalibration, setRequiresCalibration] = useState('No');
@@ -93,7 +93,7 @@ export default function NewCategoryPage({
       iconColor: selectedSwatch.hex,
       description: description.trim() || undefined,
       parentCategory: parentCategory !== 'None' ? parentCategory : undefined,
-      depreciationMethod,
+      depreciationMethod: depreciationMethod === 'None' ? undefined : depreciationMethod,
       usefulLifeYears: Number(usefulLifeYears) || 5,
       maintenanceInterval,
       requiresCalibration: requiresCalibration === 'Yes',

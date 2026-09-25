@@ -141,7 +141,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard"             element={<DashboardPage onNewAssetClick={() => {}} />} />
+            <Route path="dashboard"             element={<DashboardPage />} />
             <Route path="assets"                element={<AssetsPage isCreatingAssetDirectly={false} />} />
             <Route path="assets/new"            element={<NewAssetPage />} />
             <Route path="assign-asset"          element={<AssignAssetPage />} />
