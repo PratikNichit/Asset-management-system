@@ -3,6 +3,8 @@ import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Chip from '@mui/material/Chip';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -138,6 +140,12 @@ export default function AssetTable({
   // ── Local UI state ──────────────────────────────────────────────────────────
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [search, setSearch] = useState('');
+  
+  const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'warranty' | 'newest'>('newest');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+  
+  const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
 
   // ── Category tabs — derived entirely from the data ─────────────────────────
 
@@ -160,13 +168,27 @@ export default function AssetTable({
 
   const filteredAssets = useMemo(() => {
     const q = search.toLowerCase();
-    return assets.filter((a) => {
+    let result = assets.filter((a) => {
       const matchesCategory = activeCategory === 'All' || a.category === activeCategory;
+      const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
       const matchesSearch =
         !q || searchFields.some((f) => (a[f] ?? '').toLowerCase().includes(q));
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesStatus && matchesSearch;
     });
-  }, [assets, activeCategory, search, searchFields]);
+    
+    result.sort((a, b) => {
+      if (sortOrder === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortOrder === 'name-desc') return b.name.localeCompare(a.name);
+      if (sortOrder === 'warranty') {
+        const dateA = a.warrantyExpiry ? new Date(a.warrantyExpiry).getTime() : 0;
+        const dateB = b.warrantyExpiry ? new Date(b.warrantyExpiry).getTime() : 0;
+        return dateA - dateB;
+      }
+      return (b.id || '').localeCompare(a.id || '');
+    });
+
+    return result;
+  }, [assets, activeCategory, search, searchFields, statusFilter, sortOrder]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -212,17 +234,48 @@ export default function AssetTable({
               variant="outline"
               size="sm"
               startIcon={<FilterListIcon sx={{ fontSize: 16 }} />}
+              onClick={(e) => setFilterAnchorEl(e.currentTarget)}
             >
               Filter
             </AppButton>
+            <Menu
+              anchorEl={filterAnchorEl}
+              open={Boolean(filterAnchorEl)}
+              onClose={() => setFilterAnchorEl(null)}
+              slotProps={{ paper: { sx: { width: 160, borderRadius: 2, mt: 0.5 } } }}
+            >
+              {['All', 'Available', 'In Use', 'Maintenance', 'Retired', 'Lost'].map((status) => (
+                <MenuItem
+                  key={status}
+                  selected={statusFilter === status}
+                  onClick={() => { setStatusFilter(status); setFilterAnchorEl(null); }}
+                  sx={{ fontSize: '0.85rem' }}
+                >
+                  {status}
+                </MenuItem>
+              ))}
+            </Menu>
+
             <AppButton
               id="asset-sort-btn"
               variant="outline"
               size="sm"
               startIcon={<SwapVertIcon sx={{ fontSize: 16 }} />}
+              onClick={(e) => setSortAnchorEl(e.currentTarget)}
             >
               Sort
             </AppButton>
+            <Menu
+              anchorEl={sortAnchorEl}
+              open={Boolean(sortAnchorEl)}
+              onClose={() => setSortAnchorEl(null)}
+              slotProps={{ paper: { sx: { width: 160, borderRadius: 2, mt: 0.5 } } }}
+            >
+              <MenuItem selected={sortOrder === 'newest'} onClick={() => { setSortOrder('newest'); setSortAnchorEl(null); }} sx={{ fontSize: '0.85rem' }}>Newest First</MenuItem>
+              <MenuItem selected={sortOrder === 'name-asc'} onClick={() => { setSortOrder('name-asc'); setSortAnchorEl(null); }} sx={{ fontSize: '0.85rem' }}>Name (A-Z)</MenuItem>
+              <MenuItem selected={sortOrder === 'name-desc'} onClick={() => { setSortOrder('name-desc'); setSortAnchorEl(null); }} sx={{ fontSize: '0.85rem' }}>Name (Z-A)</MenuItem>
+              <MenuItem selected={sortOrder === 'warranty'} onClick={() => { setSortOrder('warranty'); setSortAnchorEl(null); }} sx={{ fontSize: '0.85rem' }}>Warranty Expiry</MenuItem>
+            </Menu>
           </>
         }
       />

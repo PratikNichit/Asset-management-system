@@ -11,26 +11,41 @@ import BillingSettingsTab from '../components/settings/BillingSettingsTab';
 import AppearanceSettingsTab from '../components/settings/AppearanceSettingsTab';
 import NotificationSettingsTab from '../components/settings/NotificationSettingsTab';
 import SecuritySettingsTab from '../components/settings/SecuritySettingsTab';
+import UserManagementTab from '../components/settings/UserManagementTab';
 
 export interface SettingsPageProps {
   organizationName?: string;
 }
 
-export type SettingsTab = 'workspace' | 'members' | 'billing' | 'appearance' | 'notifications' | 'security';
+export type SettingsTab =
+  | 'workspace'
+  | 'members'
+  | 'users'
+  | 'billing'
+  | 'appearance'
+  | 'notifications'
+  | 'security';
 
-const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
-  { id: 'workspace', label: 'Workspace' },
-  { id: 'members', label: 'Members' },
-  { id: 'billing', label: 'Billing' },
-  { id: 'appearance', label: 'Appearance' },
+const SETTINGS_TABS: { id: SettingsTab; label: string; icon?: string }[] = [
+  { id: 'workspace',     label: 'Workspace' },
+  { id: 'members',       label: 'Members' },
+  { id: 'users',         label: 'User management' },
+  { id: 'billing',       label: 'Billing' },
+  { id: 'appearance',    label: 'Appearance' },
   { id: 'notifications', label: 'Notifications' },
-  { id: 'security', label: 'Security' },
+  { id: 'security',      label: 'Security' },
 ];
 
 export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPageProps) {
   const { setBreadcrumbLinks } = useLayout();
   const [activeTab, setActiveTab] = useState<SettingsTab>('workspace');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastSeverity, setToastSeverity] = useState<'success' | 'info' | 'warning' | 'error'>('info');
+
+  const notify = (msg: string, severity: typeof toastSeverity = 'success') => {
+    setToastSeverity(severity);
+    setToastMessage(msg);
+  };
 
   useEffect(() => {
     const tabLabel = SETTINGS_TABS.find((t) => t.id === activeTab)?.label || 'Workspace';
@@ -44,25 +59,27 @@ export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPag
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'workspace':
-        return <WorkspaceSettingsTab onSave={() => setToastMessage('Workspace details saved successfully.')} />;
+        return <WorkspaceSettingsTab onSave={() => notify('Workspace details saved successfully.')} />;
       case 'members':
         return <MembersSettingsTab />;
+      case 'users':
+        return <UserManagementTab onNotify={(msg) => notify(msg, 'success')} />;
       case 'billing':
-        return <BillingSettingsTab onManageSubscription={() => setToastMessage('Redirecting to subscription management portal...')} />;
+        return <BillingSettingsTab onManageSubscription={() => notify('Redirecting to subscription management portal...', 'info')} />;
       case 'appearance':
-        return <AppearanceSettingsTab onToggleTheme={() => setToastMessage('Theme preference updated.')} />;
+        return <AppearanceSettingsTab onToggleTheme={() => notify('Theme preference updated.', 'info')} />;
       case 'notifications':
         return <NotificationSettingsTab />;
       case 'security':
-        return <SecuritySettingsTab onNotify={(msg) => setToastMessage(msg)} />;
+        return <SecuritySettingsTab onNotify={(msg) => notify(msg, 'info')} />;
       default:
-        return <WorkspaceSettingsTab onSave={() => setToastMessage('Workspace details saved successfully.')} />;
+        return <WorkspaceSettingsTab onSave={() => notify('Workspace details saved successfully.')} />;
     }
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
-      {/* ── Page Header Bar ─────────────────────────────────────────────────── */}
+      {/* ── Page Header ──────────────────────────────────────────────────────── */}
       <Box>
         <Typography
           variant="h4"
@@ -71,29 +88,14 @@ export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPag
           Settings
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.9rem' }}>
-          Manage your workspace and personal preferences.
+          Manage your workspace, users, and personal preferences.
         </Typography>
       </Box>
 
-      {/* ── Settings Sidebar + Content Panel Grid ───────────────────────────── */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 3.5,
-          alignItems: 'flex-start',
-          flexWrap: { xs: 'wrap', md: 'nowrap' },
-        }}
-      >
-        {/* ── Left Sidebar Sub-Navigation Tabs ─────────────────────────────── */}
-        <Box
-          sx={{
-            width: { xs: '100%', md: 200 },
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 0.5,
-          }}
-        >
+      {/* ── Sidebar + Content ─────────────────────────────────────────────── */}
+      <Box sx={{ display: 'flex', gap: 3.5, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+        {/* Left nav */}
+        <Box sx={{ width: { xs: '100%', md: 210 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           {SETTINGS_TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -121,20 +123,25 @@ export default function SettingsPage({ organizationName = 'Atlas' }: SettingsPag
           })}
         </Box>
 
-        {/* ── Right Content Panel ─────────────────────────────────────────── */}
+        {/* Content */}
         <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           {renderActiveTabContent()}
         </Box>
       </Box>
 
-      {/* Snackbar notification */}
+      {/* ── Toast ────────────────────────────────────────────────────────────── */}
       <Snackbar
         open={Boolean(toastMessage)}
-        autoHideDuration={4000}
+        autoHideDuration={4500}
         onClose={() => setToastMessage(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setToastMessage(null)} severity="info" sx={{ width: '100%' }}>
+        <Alert
+          onClose={() => setToastMessage(null)}
+          severity={toastSeverity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
           {toastMessage}
         </Alert>
       </Snackbar>

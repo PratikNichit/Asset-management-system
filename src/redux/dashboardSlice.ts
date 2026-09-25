@@ -214,9 +214,21 @@ export const fetchAssetMovement = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       if (!isSupabaseConfigured()) return [] as MovementPoint[];
-      const { data, error } = await supabase.from('assets').select('created_at, updated_at, status');
-      if (error) throw error;
-      return buildMovementSeries(data ?? []);
+      
+      const { data: assetsData, error: assetsErr } = await supabase.from('assets').select('created_at');
+      if (assetsErr) throw assetsErr;
+
+      const { data: retiredData, error: retiredErr } = await supabase.from('asset_history')
+        .select('event_date')
+        .in('event_type', ['Retired', 'Lost']);
+      if (retiredErr) throw retiredErr;
+
+      const rows = [
+        ...(assetsData ?? []).map((a) => ({ created_at: a.created_at, status: 'Active' })),
+        ...(retiredData ?? []).map((r) => ({ updated_at: r.event_date, status: 'Retired' })),
+      ];
+
+      return buildMovementSeries(rows);
     } catch (err) {
       return rejectWithValue((err as Error).message);
     }

@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -14,6 +15,7 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+.env
 !.vscode/extensions.json
 .idea
 .DS_Store

@@ -47,7 +47,6 @@ import {
 export interface DashboardPageProps {
   userName?: string;
   organizationName?: string;
-  onNewAssetClick?: () => void;
 }
 
 // Group assets by a string field → sorted [{name, value}] (largest first).
@@ -72,7 +71,6 @@ function countBy<T extends Record<string, any>>(items: T[], field: keyof T, fall
 export default function DashboardPage({
   userName: propUserName,
   organizationName = 'Atlas Industries',
-  onNewAssetClick,
 }: DashboardPageProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -114,9 +112,8 @@ export default function DashboardPage({
   }, [organizationName, setBreadcrumbLinks]);
 
   const handleNewAsset = useCallback(() => {
-    if (onNewAssetClick) onNewAssetClick();
-    else navigate('/assets/new');
-  }, [onNewAssetClick, navigate]);
+    navigate('/assets/new');
+  }, [navigate]);
 
   // ── Derived chart data (real assets from Redux) ────────────────────────────
   const visibleMovement = useMemo(() => {

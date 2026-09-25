@@ -14,6 +14,8 @@ import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
+import Tooltip from '@mui/material/Tooltip';
 import AppButton from '../components/AppButton';
 import { useAppSelector } from '../app/hooks';
 import { selectAuthError } from '../redux/authSlice';
@@ -172,9 +174,36 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
               Demo Credentials:
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.785rem' }}>
-              Email: <strong>admin@atlast.com</strong> | Password: <strong>admin</strong>
-            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.785rem' }}>
+                  Email: <strong>nichitpratik9@gmail.com</strong>
+                </Typography>
+                <Tooltip title="Copy Email">
+                  <IconButton
+                    size="small"
+                    onClick={() => navigator.clipboard.writeText('nichitpratik9@gmail.com')}
+                    sx={{ p: 0.25, color: theme.palette.primary.main }}
+                  >
+                    <ContentCopyOutlinedIcon sx={{ fontSize: '0.85rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.785rem' }}>
+                  Password: <strong>Admin@123</strong>
+                </Typography>
+                <Tooltip title="Copy Password">
+                  <IconButton
+                    size="small"
+                    onClick={() => navigator.clipboard.writeText('Admin@123')}
+                    sx={{ p: 0.25, color: theme.palette.primary.main }}
+                  >
+                    <ContentCopyOutlinedIcon sx={{ fontSize: '0.85rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </Box>
 
           {error && (
@@ -213,7 +242,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@atlast.com"
+              placeholder="nichitpratik9@gmail.com"
               required
               slotProps={{
                 input: {
@@ -287,7 +316,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="admin"
+              placeholder="Admin@123"
               required
               slotProps={{
                 input: {

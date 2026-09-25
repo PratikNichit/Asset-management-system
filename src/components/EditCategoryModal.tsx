@@ -12,7 +12,7 @@ import Box from '@mui/material/Box';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { AssetCategoryItem, CategoryIconType } from '../types/category';
 
-const DEPRECIATION_METHODS = ['Straight line', 'Declining balance', 'Units of production', 'None'];
+const DEPRECIATION_METHODS = ['Straight Line', 'Declining Balance', 'None'];
 const ICON_TYPES: CategoryIconType[] = ['laptop', 'monitor', 'machine', 'mold', 'forklift', 'peripheral', 'furniture', 'software', 'generic'];
 
 interface EditCategoryModalProps {
@@ -78,7 +78,7 @@ export default function EditCategoryModal({
             <TextField label="Description" value={form.description ?? ''} onChange={handleChange('description')} fullWidth multiline rows={2} size="small" sx={inputSx} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Depreciation Method" select value={form.depreciationMethod ?? 'Straight line'} onChange={handleChange('depreciationMethod')} fullWidth size="small" sx={inputSx}>
+            <TextField label="Depreciation Method" select value={form.depreciationMethod ?? 'Straight Line'} onChange={handleChange('depreciationMethod')} fullWidth size="small" sx={inputSx}>
               {DEPRECIATION_METHODS.map((m) => <MenuItem key={m} value={m}>{m}</MenuItem>)}
             </TextField>
           </Grid>
@@ -105,7 +105,7 @@ export default function EditCategoryModal({
           sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, fontFamily: '"Manrope", sans-serif', px: 2.5, borderColor: 'customColors.borderLight', color: 'text.primary' }}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={() => onSave(form)} disabled={isSaving || !form.name.trim()}
+        <Button variant="contained" onClick={() => onSave({ ...form, depreciationMethod: form.depreciationMethod === 'None' ? undefined : form.depreciationMethod })} disabled={isSaving || !form.name.trim()}
           sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, fontFamily: '"Manrope", sans-serif', px: 2.5, bgcolor: '#4F46E5', '&:hover': { bgcolor: '#4338CA' } }}>
           {isSaving ? 'Saving…' : 'Save changes'}
         </Button>
