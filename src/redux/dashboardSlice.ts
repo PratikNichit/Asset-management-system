@@ -185,7 +185,7 @@ function buildMovementSeries(rows: any[]): MovementPoint[] {
 const initialState: DashboardState = {
   stats: computeStatsFromAssets([]),
   movement: [],
-  movementRange: '7M',
+  movementRange: 'All',
   activity: [],
   isLoading: false,
   analyticsLoading: false,

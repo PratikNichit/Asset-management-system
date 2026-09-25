@@ -141,23 +141,23 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard"             element={<DashboardPage />} />
-            <Route path="assets"                element={<AssetsPage isCreatingAssetDirectly={false} />} />
-            <Route path="assets/new"            element={<NewAssetPage />} />
-            <Route path="assign-asset"          element={<AssignAssetPage />} />
-            <Route path="maintenance"           element={<MaintenancePage />} />
-            <Route path="maintenance/schedule"  element={<ScheduleWorkPage />} />
-            <Route path="employees"             element={<EmployeesPage />} />
-            <Route path="employees/new"         element={<AddEmployeePage />} />
-            <Route path="departments"           element={<DepartmentsPage />} />
-            <Route path="departments/new"       element={<NewDepartmentPage />} />
-            <Route path="locations"             element={<LocationsPage />} />
-            <Route path="categories"            element={<CategoriesPage />} />
-            <Route path="categories/new"        element={<NewCategoryPage />} />
-            <Route path="reports"               element={<ReportsPage />} />
-            <Route path="notifications"         element={<NotificationsPage />} />
-            <Route path="settings"              element={<SettingsPage />} />
-            <Route path="*"                     element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="assets" element={<AssetsPage isCreatingAssetDirectly={false} />} />
+            <Route path="assets/new" element={<NewAssetPage />} />
+            <Route path="assign-asset" element={<AssignAssetPage />} />
+            <Route path="maintenance" element={<MaintenancePage />} />
+            <Route path="maintenance/schedule" element={<ScheduleWorkPage />} />
+            <Route path="employees" element={<EmployeesPage />} />
+            <Route path="employees/new" element={<AddEmployeePage />} />
+            <Route path="departments" element={<DepartmentsPage />} />
+            <Route path="departments/new" element={<NewDepartmentPage />} />
+            <Route path="locations" element={<LocationsPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="categories/new" element={<NewCategoryPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Route>
       </Routes>
